@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "ProjectorMaster"
+		},
+		{
+			"path": "ProjectorSandbox"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"platformio-ide.activeState": true
+	}
+}

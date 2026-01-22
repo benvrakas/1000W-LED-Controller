@@ -1,0 +1,16 @@
+# --- PlatformIO Specific ---
+# Ignore the local build and library cache for both projects
+**/.pio/
+**/.vscode/
+**/.gcc-flags.json
+
+# --- Compiled Files ---
+# Never upload the actual firmware files
+**/*.bin
+**/*.elf
+**/*.hex
+
+# --- System Files ---
+.DS_Store
+Thumbs.db
+*.log

@@ -5,25 +5,16 @@ Important Notes:
     inturupt essential systems. We can't have a situation where a task is taking up time from an essential proccess. For example if a oled object or function blocks thermistor read for 500ms that is enough time to damage hardware
 
 File Structure:
-    Docs
-        README
-    Headers
-        Board Pins
-        System INIT
-        CoolingSystem
-    CPPs
-        SystemInit
-        *Temprature System
-        CoolingSystem
-        
 
 Main Logic Structure:
-    Interupt - on seperate hardware
+    Interupt - on seperate hardware //All Interupt data has to be stored as a volatile
         Encoder - Interupt
+            300 pulse
         Power button presses - Interupt
         Tachocometer Readings - Interupt
     Fast Systems
         PM Bus - Milis(50)
+            Current controlled - Max = 20.8333
     Slow Systems
         Main Fan PWM - Milis(100)
         Aux Fan PWM - Milis(100)

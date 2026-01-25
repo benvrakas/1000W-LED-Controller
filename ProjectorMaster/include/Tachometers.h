@@ -1,6 +1,5 @@
 #pragma once
 
-#include "BoardPins.h"
 #include <Arduino.h>
 
 namespace TachometerConfig {
@@ -10,14 +9,12 @@ namespace TachometerConfig {
 
 class TachometerManager {
     public:
-        TachometerManager(uint8_t pwmPin, uint8_t tachPin);
-
         //Initialization
+        TachometerManager(uint8_t pwmPin, uint8_t tachPin);
         void begin();
 
         //Setters
         void setDuty(uint8_t duty, uint8_t minDeadStart); // 0-255
-        void setPulseCount(uint32_t count);
 
         //Getters
         uint16_t getRPM() const; 
@@ -25,7 +22,7 @@ class TachometerManager {
         uint32_t getPulseCount() const;
 
         //RPM Calculation
-        void updateRPM(unsigned long currentMillis);
+        void calculateRPM(unsigned long currentMillis);
 
         //Emergency Stops
         void stop();                

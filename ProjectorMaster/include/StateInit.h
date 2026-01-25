@@ -4,6 +4,7 @@
 
 class SystemStartup {
 public:
+    //Class Construction
     SystemStartup();
 
     //Getter for checking each step status

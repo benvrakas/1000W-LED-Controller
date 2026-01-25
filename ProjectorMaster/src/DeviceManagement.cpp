@@ -10,10 +10,21 @@
 //Not every "Hardware device" needs a class some just need global functions
 
     //PSU Class Construction
+    PMBusManager::PMBusManager(uint8_t sdaPin, uint8_t sclPin, uint8_t address)
+        : _address(address), _bus(nullptr) 
+    {}
 
     //PSU Functions Definition
+        //Initialization
+        void PMBusManager::begin(TwoWire* i2cBus) {
+            _bus = i2cBus;
+        }
 
+        
     //Display Class Construction
+    OledManager::OledManager(uint8_t sdaPin, uint8_t sclPin, uint8_t address, uint8_t width, uint8_t height)
+        : _address(address), _width(width), _height(height), _bus(nullptr), _display(nullptr) 
+    {}
 
     //Display Functions Definition
         //Initialization
@@ -66,7 +77,7 @@
         }
 
         //RPM Calculation
-        void TachometerManager::updateRPM(unsigned long currentMillis) {
+        void TachometerManager::calculateRPM(unsigned long currentMillis) {
             unsigned long now = currentMillis;
             unsigned long duration = now - _lastRPMCompute;
 
@@ -144,9 +155,39 @@
         void TachometerManager::handleTachoInterrupt() {
             _pulseCount++;
         }
+    
+    //Button Class Construction
+    PowerButtonManager::PowerButtonManager(uint8_t swPin, uint8_t ledPin)
+        : _pressDuration(0), 
+        _buttonPressed(false), 
+        _lastState(false),
+        _abortRequested(false) 
+    {}
 
     //Button Functions Definition
-    
+        //Initialization
+        void PowerButtonManager::begin() {
+            pinMode(BoardPins::PIN_SW_BTN, INPUT_PULLUP);
+        }
+
+        //Getters
+        bool PowerButtonManager::isPressed() const {
+            return _buttonPressed;
+        }
+
+        bool PowerButtonManager::isLongPress() const {
+            return _pressDuration >= 3000; // 3 seconds threshold
+        }
+
+        //Monitoring
+
+        //ISR
+        void PowerButtonManager::handleButtonInterrupt() {
+            if (digitalRead(BoardPins::PIN_SW_BTN) == LOW) {
+                abortRequested = true;
+            }
+        }
+
     //Encoder Functions Definition
     
     //Thermistor Class Construction

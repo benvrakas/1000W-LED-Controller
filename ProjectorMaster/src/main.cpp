@@ -14,6 +14,9 @@
 //Initialize System Controller
 SystemController sys;
 
+//Initialize Power Button Manager
+PowerButtonManager powerButton(BoardPins::PIN_SW_BTN, BoardPins::PIN_SW_LED);
+
 //Initailize Tachometer Managers
 TachometerManager pump(BoardPins::PIN_PUMP_PWM,     BoardPins::PIN_PUMP_TACH);
 TachometerManager auxFan(BoardPins::PIN_AUX_FAN_PWM,  BoardPins::PIN_AUX_FAN_TACH);
@@ -25,13 +28,14 @@ ThermistorManager ledThermistor(BoardPins::PIN_THERM_LED, 3950.0f, 10000UL);
 ThermistorManager pumpThermistor(BoardPins::PIN_THERM_WATER, 3950.0f, 10000UL);
 
 //Initialize PMBus
-PMBusManager psu(PMBusConfig::DEFAULT_ADDRESS);
+PMBusManager psu(BoardPins::PIN_I2C_SDA, BoardPins::PIN_I2C_SCL, PMBusConfig::DEFAULT_ADDRESS);
 
 //Initialize OLED Display
-OledManager  oled(OLEDScreenConfig::DEFAULT_ADDRESS,OLEDScreenConfig::SCREEN_WIDTH,OLEDScreenConfig::SCREEN_HEIGHT);
+OledManager oled(BoardPins::PIN_I2C_SDA, BoardPins::PIN_I2C_SCL, OLEDScreenConfig::DEFAULT_ADDRESS,
+    OLEDScreenConfig::SCREEN_WIDTH,OLEDScreenConfig::SCREEN_HEIGHT);
 
 void setup() {
-    Watchdog.enable(2000); //How long??? Probably longer than our Logic Watchdog
+    Watchdog.enable(1000); //How long??? Probably longer than our Logic Watchdog
     Serial.begin(115200);
     sys.begin();
 
@@ -40,6 +44,7 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_RAD_FAN_TACH), mainFanISR, FALLING);
     attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_AUX_FAN_TACH), auxFanISR,  FALLING);
     attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PSU_FAN_TACH), psuFanISR,  FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN), powerButtonISR,  FALLING);
 }
 
 void loop() {

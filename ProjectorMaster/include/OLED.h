@@ -18,7 +18,7 @@ namespace OLEDScreenConfig {
 
 class OledManager {
 public:
-    OledManager(uint8_t address, uint8_t width, uint8_t height);
+    OledManager(uint8_t sdaPin, uint8_t sclPin, uint8_t address, uint8_t width, uint8_t height);
     
     void begin(TwoWire* i2cBus = &Wire);
     void showBootScreen(const char* version);

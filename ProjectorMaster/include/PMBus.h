@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Wire.h>
-#include <BoardPins.h>
 
 namespace PMBusConfig {
     // --- Connection Settings ---
@@ -30,24 +29,20 @@ namespace PMBusCommands {
 class PMBusManager {
 public:
     // Constructor: Takes the I2C address (Default 0x40)
-    PMBusManager(uint8_t address);
+    PMBusManager(uint8_t sdaPin, uint8_t sclPin, uint8_t address);
 
     // Initialization (Call this in setup)
     void begin(TwoWire* i2cBus = &Wire);
-    bool diagnostic();
 
-    // Public API for your State Machine
-    float getVoltage();
-    float getCurrent();
-    float getTemperature();
+    // Getters
     bool  hasFault();
     
-    void setOutput(bool enable);
-    void setVoltage(float volts);
+    // Setters
+    void sendCommand(uint8_t hexCommand);
 
 private:
+    TwoWire*  _bus;
     uint8_t  _address;
-    TwoWire* _i2c;
 
     // Helper: Linear11 conversion
     float    decodeLinear11(uint16_t raw);

@@ -6,11 +6,8 @@
     "type": "git",
     "url": "https://github.com/benvrakas/1000W-LED-Controller/"
   },
-
   "frameworks": "arduino",
   "platforms": "atmelsam",
-  "board": "adafruit_feather_m4",
-  
   "dependencies": {
     "Wire": "",
     "SPI": "",
@@ -21,15 +18,20 @@
     "adafruit/Adafruit BusIO": "^1.16.2",
     "adafruit/Adafruit SleepyDog Library": "^1.7.1"
   },
-
   "build": {
-    "srcDir": "../../MasterProject/src",
-    "includeDir": "../../MasterProject/include",
+    "libLDFMode": "deep+",
+    "srcDir": "../../ProjectorMaster/src",
+    "includeDir": "../../ProjectorMaster/src",
     "srcFilter": [
-      "+<SystemController*>",
       "-<main.cpp>",
       "-<.git/>",
-      "-<.svn/>"
+      "-<.svn/>",
+      "-<*.bak>",
+      "-<temp/>"
+    ],
+    "flags": [
+      "-D SYSTEM_SHARED_ACTIVE=1",
+      "-D CORE_CONTROLLER_ONLY"
     ]
   }
 }

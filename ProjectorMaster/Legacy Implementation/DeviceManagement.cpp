@@ -76,16 +76,25 @@
             return count;
         }
 
-        //RPM Calculation
+        //Calculation
+        uint8_t TachometerManager::calculatePWM(unsigned long currentMillis, float pidOutput) {
+            unsigned long now = currentMillis;
+            unsigned long duration = now - _lastPWMCompute;
+
+            if (duration > _computeInterval) {
+            uint8_t pwmValue = static_cast<uint8_t>((pidOutput * 255.0f) + 0.5f); // Round to nearest integer
+            _lastPWMCompute = now;    
+            }     
+            return pwmValue;  
+        }
+
         void TachometerManager::calculateRPM(unsigned long currentMillis) {
             unsigned long now = currentMillis;
             unsigned long duration = now - _lastRPMCompute;
 
-            if (duration >= 100) {
-                noInterrupts();
+            if (duration >= _computeInterval) {
                 uint32_t capturedPulses = _pulseCount; 
                 _pulseCount = 0;                      
-                interrupts();
 
                 _currentRPM = (uint16_t)((capturedPulses * 30000UL) / duration);
                 
@@ -93,14 +102,13 @@
             }
         }
 
-        //PID Calculation
-        float TachometerManager::tunePID(float sv, float pv) {
+        float TachometerManager::tunePID(unsigned long currentMillis, uint16_t rpm, float sv, float pv) {
             float error = pv - sv;
-            unsigned long now = millis();
+            unsigned long now = currentMillis;
             float dt = (now - _lastPIDTime) / 1000.0f; // Convert to seconds
 
             // Guard against double-calling or 0-time steps
-            if (dt <= 0.0f) return _lastOutput; 
+            if (dt <= 0.0f) return _lastPWM; 
 
             // 1. Proportional term
             float Pout = _Kp * error;
@@ -132,7 +140,7 @@
             // Save for next loop
             _lastError = error;
             _lastPIDTime = now;
-            _lastOutput = output; 
+            _lastPWM = output; 
 
             return output;
         }

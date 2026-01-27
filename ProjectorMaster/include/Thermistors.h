@@ -8,17 +8,16 @@ namespace ThermistorConfig {
 }
 
 class ThermistorManager {
-    public:       
-        // Initialization
+    public:    
+        //Class Construction
         ThermistorManager(uint8_t pin, float beta, uint32_t seriesResistor);
+
+        //Initialization
         void begin();
 
-        // Getters for your SystemController
+        //Getters
         float getCelsius() const;
-        bool isActive() const;
-
-        // The "Worker" function: Call this in your loop to refresh data
-        void updateTemp();
+        bool getStatus() const;
 
     private:
         uint8_t  _pin;
@@ -27,8 +26,11 @@ class ThermistorManager {
         float    _currentTemp;
         bool     _isValid;
 
-        // Internal math for Steinhart-Hart
+        //Caclulation
         float calculateCelsius(uint16_t adcValue);
+
+        //Update Temperature Reading
+        void updateTemp();
 };
 extern ThermistorManager ledThermistor;
 extern ThermistorManager pumpThermistor;

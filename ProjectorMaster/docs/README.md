@@ -13,17 +13,22 @@ Main Logic Structure:
         Power button presses - Interupt
         Tachocometer Readings - Interupt
     Fast Systems
-        PM Bus - Milis(50)
+        PM Bus - Millis(50)
             Current controlled - Max = 20.8333
     Slow Systems
-        Main Fan PWM - Milis(100)
-        Aux Fan PWM - Milis(100)
-        LED Housing Fan PWM - Milis(100)
-        Thermistor Reading - Millis(100)
-            50c for water
-            75 for led
+        Main Fan PWM - Millis(500) - PID Tuned
+        Aux Fan PWM - Millis(200)
+        PSU Fan PWM - Millis(100) - PID Tuned
+        Pump PWM - Millis(200) - PID Tuned
+        Thermistor Reading
+            50c for water - Millis(500)
+            75 for led - Millis(200)
         Oled updates
         PID Tuning
+            Calculate RPM
+            Take Thermal reading
+            Calculate PID
+            Calculate PWM
 
 
         /**

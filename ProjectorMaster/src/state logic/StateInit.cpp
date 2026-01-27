@@ -5,7 +5,7 @@
 #include "PMBus.h"
 
 //Handler Function Implementation
-void handleInitState(SystemController &sys, unsigned long now) {
+void handleInitState(SystemController &sys, unsigned long currentMillis) {
     //Button interupt check
 
     //Define variables
@@ -21,7 +21,7 @@ void handleInitState(SystemController &sys, unsigned long now) {
 
             //Check that our hardware system is ready, if so move to next case
             if(startup.getStepStatus(data.bootStep)) {
-                data.lastStepTime = now;
+                data.lastStepTime = currentMillis;
                 data.bootStep = 2; 
             }
             break;
@@ -30,7 +30,7 @@ void handleInitState(SystemController &sys, unsigned long now) {
             startup.pumpInit();
 
             if(startup.getStepStatus(data.bootStep)) {
-                data.lastStepTime = now;
+                data.lastStepTime = currentMillis;
                 data.bootStep = 3; 
             }
             break;
@@ -39,7 +39,7 @@ void handleInitState(SystemController &sys, unsigned long now) {
             startup.fansInit();
 
             if(startup.getStepStatus(data.bootStep)) {
-                data.lastStepTime = now;
+                data.lastStepTime = currentMillis;
                 data.bootStep = 4; 
             }
             break;
@@ -48,7 +48,7 @@ void handleInitState(SystemController &sys, unsigned long now) {
             startup.psuInit();
 
             if(startup.getStepStatus(data.bootStep)) {
-                data.lastStepTime = now;
+                data.lastStepTime = currentMillis;
                 data.bootStep = 5; 
             }
             break;
@@ -57,7 +57,7 @@ void handleInitState(SystemController &sys, unsigned long now) {
             startup.displayInit();
 
             if(startup.getStepStatus(data.bootStep)) {
-                data.lastStepTime = now;
+                data.lastStepTime = currentMillis;
                 data.bootStep = 6; 
             }
             break;
@@ -75,7 +75,7 @@ void handleInitState(SystemController &sys, unsigned long now) {
     }
 
     //Local Logic Watchdog
-    if (now - data.lastStepTime > 500) {
+    if (currentMillis - data.lastStepTime > 500) {
         sys.transitionTo(SystemState::ERROR_KILL);
         return;
     }

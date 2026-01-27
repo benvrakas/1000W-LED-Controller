@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include "Tachometers.h"
 #include "PowerButton.h"
 #include "Encoder.h"

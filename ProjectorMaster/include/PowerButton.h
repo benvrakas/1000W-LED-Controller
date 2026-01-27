@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Arduino.h>
+
 volatile bool abortRequested;
 
 class PowerButtonManager {
@@ -20,6 +22,8 @@ class PowerButtonManager {
         void handleButtonInterrupt();
         
     private:
+        uint8_t  _swPin;
+        uint8_t  _ledPin;
         uint16_t _pressDuration;
         bool _buttonPressed;
         volatile bool _abortRequested;

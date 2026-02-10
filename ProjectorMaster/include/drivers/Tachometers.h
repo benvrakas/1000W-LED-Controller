@@ -17,7 +17,7 @@ namespace TachometerConfig {
     //RPM Limits
     static constexpr uint16_t MAX_MAIN_PSU_RPM = 3000;
     static constexpr uint16_t MAX_AUX_RPM = 6000;
-    static constexpr uint16_t MAX_PUMP_RPM = 3000;
+    static constexpr uint16_t MAX_PUMP_RPM = 4800;
 
     //Stall Limits
     static constexpr uint16_t MAIN_PSU_STALL_RPM = 300;
@@ -31,8 +31,9 @@ namespace TachometerConfig {
         static constexpr float MAIN_KD = 0.1f;
 
         //PSU Fan
-
-        //Aux Fan
+        static constexpr float PSU_KP = 0.2f;
+        static constexpr float PSU_KI = 0.03f;
+        static constexpr float PSU_KD = 0.1f;
 
         //Pump
         static constexpr float PUMP_KP = 0.15f;
@@ -42,7 +43,7 @@ namespace TachometerConfig {
     //Low Pass Filtter Alpha Values
     static constexpr float MAIN_ALPHA = 0.15f;
     static constexpr float PSU_ALPHA = 0.5f;
-    static constexpr float PUMP_APLHA = 0.3f;
+    static constexpr float PUMP_ALPHA = 0.3f;
 
     }
 
@@ -75,16 +76,20 @@ class TachometerManager {
         
         //Constants
         unsigned long _computeInterval;
-        float _kp;
-        float _ki;
-        float _kd;
-        float _alpha;
-        uint8_t _minDeadStart;
-        uint16_t _maxRPM;
-        uint16_t _stallRPM;
+
+            //Motor
+            uint8_t _minDeadStart;
+            uint16_t _maxRPM;
+            uint16_t _stallRPM;
+
+            //PID
+            float _kp;
+            float _ki;
+            float _kd;
+            float _alpha;
 
         //Operational Variables
-            //Fan
+            //Motor
             uint8_t  _currentDuty;
             volatile uint32_t _pulseCount; // volatile because it changes in interrupt
             uint16_t _currentRPM;

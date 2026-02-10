@@ -9,8 +9,8 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
     //Button interupt check
 
     //Define variables
-    static SystemStartup startup;
-    auto &data = sys.stateData.init;
+    static SystemStartup startup; 
+    auto &data = sys.stateData.init; 
     
 
     //Switch statement where we go through all init steps and verify they are safe

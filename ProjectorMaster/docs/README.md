@@ -16,13 +16,13 @@ Main Logic Structure:
         PM Bus - Millis(50)
             Current controlled - Max = 20.8333
     Slow Systems
-        Main Fan PWM - Millis(500) - PID Tuned
-        Aux Fan PWM - Millis(200)
-        PSU Fan PWM - Millis(100) - PID Tuned
-        Pump PWM - Millis(200) - PID Tuned
+        Main Fan PWM - Millis(100) - PID Tuned, using water temp readings
+        Aux Fan PWM - Millis(20) - PWM = Brightness level
+        PSU Fan PWM - Millis(20) - PID Tuned, using pmbus temp readings
+        Pump PWM - Millis(20) - PID Tuned, using led temp readings (I need pump documentation)
         Thermistor Reading
-            50c for water - Millis(500)
-            75 for led - Millis(200)
+            50c for water - Millis(100)
+            75 for led - Millis(20)
         Oled updates
         PID Tuning
             Calculate RPM

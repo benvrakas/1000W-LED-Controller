@@ -5,10 +5,10 @@
         : _address(address), _width(width), _height(height), _bus(nullptr), _display(nullptr) 
     {}
 
-    //Display Functions Definition
-        //Initialization
-        void OledManager::begin(TwoWire* i2cBus) {
-            _bus = i2cBus;
-            _display = new Adafruit_SSD1306(_width, _height, _bus, -1);
+//Display Functions Definition
+    //Initialization
+    void OledManager::begin(TwoWire* i2cBus) {
+        _bus = i2cBus;
+        _display = new Adafruit_SSD1306(_width, _height, _bus, -1);
 
-        }
+    }

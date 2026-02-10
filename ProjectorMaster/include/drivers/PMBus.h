@@ -17,7 +17,6 @@ namespace PMBusConfig {
 }
 
 namespace PMBusCommands {
-    static constexpr uint8_t VOUT_COMMAND    = 0x21; // Set Voltage
     static constexpr uint8_t OPERATION       = 0x01; // Power On/Off
     static constexpr uint8_t STATUS_WORD     = 0x79; // Fault status
     static constexpr uint8_t READ_VOUT       = 0x8B; // Read Actual Volts

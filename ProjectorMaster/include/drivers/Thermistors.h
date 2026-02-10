@@ -5,6 +5,12 @@
 namespace ThermistorConfig {
     static constexpr float MAX_TEMP_LED = 75.0f;
     static constexpr float MAX_TEMP_PUMP = 50.0f;
+
+    static constexpr float BETA_VALUE_LED = 3950.0f;
+    static constexpr float BETA_VALUE_PUMP = 3950.0f;
+
+    static constexpr uint32_t SERIES_RESISTOR_LED = 10000UL; // 10k Ohm
+    static constexpr uint32_t SERIES_RESISTOR_PUMP = 10000UL; // 12-bit ADC
 }
 
 class ThermistorManager {

@@ -5,8 +5,8 @@
         : _address(address), _bus(nullptr) 
     {}
 
-    //PSU Functions Definition
-        //Initialization
-        void PMBusManager::begin(TwoWire* i2cBus) {
-            _bus = i2cBus;
-        }
+//PSU Functions Definition
+    //Initialization
+    void PMBusManager::begin(TwoWire* i2cBus) {
+        _bus = i2cBus;
+    }

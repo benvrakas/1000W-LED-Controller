@@ -58,7 +58,7 @@
 
             float newTemp = calculateCelsius(raw);
             
-                if (_currentTemp == 0.0f) {
+                if (_currentTemp == 0.0f) { 
                     _currentTemp = newTemp;
                 } else {
                     _currentTemp = (_currentTemp * 0.9f) + (newTemp * 0.1f);

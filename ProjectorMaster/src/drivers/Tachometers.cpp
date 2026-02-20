@@ -15,6 +15,7 @@ TachometerManager::TachometerManager(uint8_t pwmPin, uint8_t tachPin, unsigned l
             pinMode(_pwmPin, OUTPUT);
             pinMode(_tachPin, INPUT_PULLUP);
             analogWriteResolution(8);
+            
         }
 
         //Getters
@@ -90,7 +91,7 @@ TachometerManager::TachometerManager(uint8_t pwmPin, uint8_t tachPin, unsigned l
                 if (dt <= 0.0f) {
                     output = _lastPID;            
                 } else {
-                    // 1. Proportional term
+                    // 1. Proportional term. Can I use the current rpm like this?
                     rpmFactor += (_currentRPM / 10000.0f);
                     float Pout = (_kp * rpmFactor) * error;
 

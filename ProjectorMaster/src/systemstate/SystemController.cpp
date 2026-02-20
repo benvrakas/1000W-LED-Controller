@@ -12,8 +12,6 @@ void SystemController::begin() {
     // Clear the union memory to start clean
     memset(&stateData, 0, sizeof(stateData));
 
-    // Set machine state to INIT
-    currentState = SystemState::INIT;
 }
 
 // 2. The Main State Machine Loop

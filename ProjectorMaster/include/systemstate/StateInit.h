@@ -13,9 +13,10 @@ public:
     //Setter for each step status
     void setStepStatus(uint8_t bootStep, bool status);
 
-    //Initialization functions
+    //Initialization and verification functions
     void boardPinsInit();
     void boardPinsVerify(uint8_t bootStep);
+    void isrInit();
     void pumpInit();
     void pumpVerify(uint8_t bootStep);
     void fansInit();

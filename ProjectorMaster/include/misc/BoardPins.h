@@ -30,4 +30,19 @@ namespace BoardPins {
     // ---I2C PIN DECLERATION---
     static constexpr uint8_t PIN_I2C_SDA = SDA; 
     static constexpr uint8_t PIN_I2C_SCL = SCL;
+
+    // ---EIC Channels---
+    static constexpr IRQn_Type EIC_CHANNEL_BUTTON = EIC_9_IRQn;
+    static constexpr IRQn_Type EIC_CHANNEL_PUMP_TACH = EIC_0_IRQn;
+    static constexpr IRQn_Type EIC_CHANNEL_MAIN_FAN_TACH = EIC_1_IRQn;
+    static constexpr IRQn_Type EIC_CHANNEL_AUX_FAN_TACH = EIC_0_IRQn;
+    static constexpr IRQn_Type EIC_CHANNEL_PSU_FAN_TACH = EIC_7_IRQn;
+    static constexpr IRQn_Type EIC_CHANNEL_ENCODER_A = EIC_6_IRQn;
+    static constexpr IRQn_Type EIC_CHANNEL_ENCODER_B = EIC_4_IRQn;
+
+    // ---EIC Priority Ranks---
+    static constexpr uint8_t EIC_PRIORITY_BUTTON = 0;
+    static constexpr uint8_t EIC_PRIORITY_TACH = 1;
+    static constexpr uint8_t EIC_PRIORITY_ENCODER = 2;
+    
 }

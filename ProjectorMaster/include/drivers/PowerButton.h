@@ -2,8 +2,6 @@
 
 #include <Arduino.h>
 
-volatile bool abortRequested;
-
 class PowerButtonManager {
     public:
         //Class Construction
@@ -13,24 +11,22 @@ class PowerButtonManager {
         void begin();
 
         //Getters
-        bool isPressed() const;
-        bool isLongPress() const;
-
-        //Monitoring
+        bool isArmed() const;
 
         //ISR Support
-        void handleButtonInterrupt();
+        void handleButtonInterruptRising();
+        void handleButtonInterruptFalling();
         
     private:
         uint8_t  _swPin;
         uint8_t  _ledPin;
-        uint16_t _pressDuration;
-        bool _buttonPressed;
-        volatile bool _abortRequested;
-        bool _lastState;
+        volatile unsigned long _pressTimeStamp;
+        volatile unsigned long _pressDuration;
+        volatile bool _armStatus;
 
 };
 extern PowerButtonManager powerButton;
 
 //ISR Bridge Function Declarations
-void powerButtonISR();
+void powerButtonISRRising();
+void powerButtonISRFalling();

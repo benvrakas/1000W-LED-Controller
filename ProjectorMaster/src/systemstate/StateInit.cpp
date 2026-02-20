@@ -1,6 +1,8 @@
 #include "SystemController.h"
 #include "StateInit.h"
 #include "BoardPins.h"
+#include "Tachometers.h"
+#include "PowerButton.h"
 #include "OLED.h"
 #include "PMBus.h"
 
@@ -9,10 +11,9 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
     //Button interupt check
 
     //Define variables
-    static SystemStartup startup; 
+    static SystemStartup startup; //Static so the compiler knows this is made once and information is retained even when we go out of handleInitState scope
     auto &data = sys.stateData.init; 
     
-
     //Switch statement where we go through all init steps and verify they are safe
     switch (data.bootStep) {
         case 1: //Board pins init
@@ -149,10 +150,7 @@ void SystemStartup::boardPinsInit() {
 
     // Startup I2C Connection
     Wire.begin(BoardPins::PIN_I2C_SDA, BoardPins::PIN_I2C_SCL);
-    Wire.setClock(PMBusConfig::BUS_SPEED);
-
-    // Verify the safe connection settings
-    
+    Wire.setClock(PMBusConfig::BUS_SPEED);  
 }
 
 // Verify the safe connection settings
@@ -204,6 +202,25 @@ void SystemStartup::boardPinsVerify(uint8_t bootStep) {
         // Logic: Input if bit IS 0
         return (PORT->Group[port].DIR.reg & pinMask) == 0;
     }
+
+void SystemStartup::isrInit() {
+    // Attach ISRs after pins are configured
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PUMP_TACH), pumpISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_RAD_FAN_TACH), mainFanISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_AUX_FAN_TACH), auxFanISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PSU_FAN_TACH), psuFanISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN), powerButtonISRFalling, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN), powerButtonISRRising, RISING);
+
+    // Set priority of EIC channels
+    NVIC_SetPriority(BoardPins::EIC_CHANNEL_BUTTON, BoardPins::EIC_PRIORITY_BUTTON);
+    NVIC_SetPriority(BoardPins::EIC_CHANNEL_PUMP_TACH, BoardPins::EIC_PRIORITY_TACH);
+    NVIC_SetPriority(BoardPins::EIC_CHANNEL_MAIN_FAN_TACH, BoardPins::EIC_PRIORITY_TACH);
+    NVIC_SetPriority(BoardPins::EIC_CHANNEL_AUX_FAN_TACH, BoardPins::EIC_PRIORITY_TACH);
+    NVIC_SetPriority(BoardPins::EIC_CHANNEL_PSU_FAN_TACH, BoardPins::EIC_PRIORITY_TACH);
+    NVIC_SetPriority(BoardPins::EIC_CHANNEL_ENCODER_A, BoardPins::EIC_PRIORITY_ENCODER);
+    NVIC_SetPriority(BoardPins::EIC_CHANNEL_ENCODER_B, BoardPins::EIC_PRIORITY_ENCODER);
+}
 
 //Pump
     void SystemStartup::pumpInit() {

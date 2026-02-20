@@ -2,30 +2,31 @@
 
 //Button Class Construction
     PowerButtonManager::PowerButtonManager(uint8_t swPin, uint8_t ledPin)
-        : _swPin(swPin), _ledPin(ledPin), _pressDuration(0), _buttonPressed(false), 
-        _abortRequested(false), _lastState(false)
+        : _swPin(swPin), _ledPin(ledPin), _pressDuration(0),  _armStatus(false)
     {}
 
 //Button Functions Definition
         //Initialization
         void PowerButtonManager::begin() {
-            pinMode(_swPin, INPUT_PULLUP);
+            pinMode(_swPin, INPUT_PULLUP);       
         }
 
         //Getters
-        bool PowerButtonManager::isPressed() const {
-            return _buttonPressed;
+        bool PowerButtonManager::isArmed() const {
+            return _armStatus;
         }
-
-        bool PowerButtonManager::isLongPress() const {
-            return _pressDuration >= 3000; // 3 seconds threshold
-        }
-
-        //Monitoring
 
         //ISR
-        void PowerButtonManager::handleButtonInterrupt() {
-            if (digitalRead(_swPin) == LOW) {
-                abortRequested = true;
+        void PowerButtonManager::handleButtonInterruptRising() {
+            _pressDuration = millis() - _pressTimeStamp;
+            if (_pressDuration >= 3000 && _armStatus == false) {               
+                _armStatus = true;
+            }
+        }
+
+        void PowerButtonManager::handleButtonInterruptFalling() {
+            _pressTimeStamp = millis();
+            if (_armStatus == true) {
+                _armStatus = false;
             }
         }

@@ -16,7 +16,7 @@ SystemController sys;
 //Initialize Power Button Manager
 PowerButtonManager powerButton(BoardPins::PIN_SW_BTN, BoardPins::PIN_SW_LED);
 
-//Initailize Tachometer Managers
+//Initailize Tachometer Managers, we need a PID class that inherents from Tach class
 TachometerManager pump(BoardPins::PIN_PUMP_PWM, BoardPins::PIN_PUMP_TACH,
     TachometerConfig::PUMP_COMPUTE_INTERVAL, TachometerConfig::PUMP_KP, 
     TachometerConfig::PUMP_KI, TachometerConfig::PUMP_KD, TachometerConfig::PUMP_ALPHA, 
@@ -50,16 +50,9 @@ OledManager oled(BoardPins::PIN_I2C_SDA, BoardPins::PIN_I2C_SCL, OLEDScreenConfi
     OLEDScreenConfig::SCREEN_WIDTH,OLEDScreenConfig::SCREEN_HEIGHT);
 
 void setup() {
-    Watchdog.enable(1000); //How long??? Probably longer than our Logic Watchdog
+    Watchdog.enable(1000); //How long??? Probably longer than our Logic Watchdogs
     Serial.begin(115200);
     sys.begin();
-
-    //Attach ISRs
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PUMP_TACH), pumpISR, FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_RAD_FAN_TACH), mainFanISR, FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_AUX_FAN_TACH), auxFanISR,  FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PSU_FAN_TACH), psuFanISR,  FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN), powerButtonISR,  FALLING);
 }
 
 void loop() {

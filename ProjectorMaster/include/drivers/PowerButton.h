@@ -14,8 +14,7 @@ class PowerButtonManager {
         bool isArmed() const;
 
         //ISR Support
-        void handleButtonInterruptRising();
-        void handleButtonInterruptFalling();
+        void handleButtonInterrupt();
         
     private:
         uint8_t  _swPin;
@@ -28,5 +27,4 @@ class PowerButtonManager {
 extern PowerButtonManager powerButton;
 
 //ISR Bridge Function Declarations
-void powerButtonISRRising();
-void powerButtonISRFalling();
+void powerButtonISR();

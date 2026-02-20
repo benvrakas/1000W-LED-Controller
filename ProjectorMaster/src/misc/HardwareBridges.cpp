@@ -11,8 +11,7 @@
     void psuFanISR()  { psuFan.handleTachoInterrupt(); }
 
 //ISR Bridge Power Button Function
-    void powerButtonISRRising() { powerButton.handleButtonInterruptRising(); }
-    void powerButtonISRFalling() { powerButton.handleButtonInterruptFalling(); }
+    void powerButtonISR() { powerButton.handleButtonInterrupt(); }
     
 // NOTE: ISR attachment must happen after pins have been configured (pinMode).
 // The attachInterrupt(...) calls were moved into the system startup sequence

@@ -25,7 +25,7 @@ void setup() {
   startup.boardPinsInit();
   startup.boardPinsVerify(1);
   startup.isrInit();
-  powerButton.begin();  
+  //powerButton.begin();  
 }
 
 void loop() {

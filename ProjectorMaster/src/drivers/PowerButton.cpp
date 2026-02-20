@@ -2,7 +2,7 @@
 
 //Button Class Construction
     PowerButtonManager::PowerButtonManager(uint8_t swPin, uint8_t ledPin)
-        : _swPin(swPin), _ledPin(ledPin), _pressDuration(0),  _armStatus(false)
+        : _swPin(swPin), _ledPin(ledPin), _pressTimeStamp(0),_pressDuration(0),  _armStatus(false)
     {}
 
 //Button Functions Definition

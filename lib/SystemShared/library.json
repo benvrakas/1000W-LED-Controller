@@ -21,8 +21,13 @@
   "build": {
     "libLDFMode": "deep+",
     "srcDir": "../../ProjectorMaster/src",
-    "includeDir": "../../ProjectorMaster/src",
+    "includeDir": "../../ProjectorMaster/include",
     "srcFilter": [
+      "+<drivers/*.cpp>",
+      "+<systemstate/*.cpp>",
+      "+<misc/*.cpp>",
+      "+<../../ProjectorSandbox/src/diagnoseDrivers/*.cpp>",
+      "+<../../ProjectorSandbox/src/diagnoseSystemState/*.cpp>",
       "-<main.cpp>",
       "-<.git/>",
       "-<.svn/>",
@@ -30,6 +35,12 @@
       "-<temp/>"
     ],
     "flags": [
+      "-I ../../ProjectorMaster/include",
+      "-I ../../ProjectorMaster/include/drivers",
+      "-I ../../ProjectorMaster/include/systemstate",
+      "-I ../../ProjectorMaster/include/misc",
+      "-I ../../ProjectorSandbox/include/diagnoseDrivers",
+      "-I ../../ProjectorSandbox/include/diagnoseSystemState",
       "-D SYSTEM_SHARED_ACTIVE=1",
       "-D CORE_CONTROLLER_ONLY"
     ]

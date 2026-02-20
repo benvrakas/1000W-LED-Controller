@@ -205,10 +205,10 @@ void SystemStartup::boardPinsVerify(uint8_t bootStep) {
 
 void SystemStartup::isrInit() {
     // Attach ISRs after pins are configured
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PUMP_TACH), pumpISR, FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_RAD_FAN_TACH), mainFanISR, FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_AUX_FAN_TACH), auxFanISR, FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PSU_FAN_TACH), psuFanISR, FALLING);
+    //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PUMP_TACH), pumpISR, FALLING);
+    //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_RAD_FAN_TACH), mainFanISR, FALLING);
+    //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_AUX_FAN_TACH), auxFanISR, FALLING);
+    //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PSU_FAN_TACH), psuFanISR, FALLING);
     attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN), powerButtonISRFalling, FALLING);
     attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN), powerButtonISRRising, RISING);
 

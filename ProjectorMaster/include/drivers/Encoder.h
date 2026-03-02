@@ -1,6 +1,6 @@
 #pragma once
 
-#include "BoardPins.h"
+#include "util/BoardPins.h"
 #include <Arduino.h>
 
 // EncoderManager

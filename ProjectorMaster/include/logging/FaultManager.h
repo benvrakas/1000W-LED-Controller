@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SystemController.h"
+#include "state/SystemController.h"
 
 // FaultCode
 // ---------
@@ -9,8 +9,19 @@
 
 enum class FaultCode : uint8_t {
     NONE = 0,
-    // TODO: Add concrete fault codes such as OVER_TEMP_LED, OVER_TEMP_WATER,
-    // CAN_TIMEOUT, PSU_FAULT, UI_FAULT, etc.
+
+    // PSU / power-path related faults
+    CAN_TIMEOUT,        // Lost CAN communication with PSU
+    PSU_FAULT,          // PSU reported an internal fault status
+
+    // Thermal and cooling faults
+    OVER_TEMP_LED,      // LED junction / MCPCB exceeded safe temperature
+    OVER_TEMP_WATER,    // Coolant temperature exceeded safe limit
+    COOLING_FAILURE,    // Fan or pump RPM too low for commanded duty
+
+    // UI / input faults
+    ENCODER_FAULT,
+    BUTTON_STUCK,
 };
 
 // FaultManager
@@ -20,19 +31,20 @@ enum class FaultCode : uint8_t {
 // states query overall system health.
 
 class FaultManager {
-public:
+ public:
     static FaultManager &instance();
 
     void raiseFault(FaultCode code);
     void clearFault(FaultCode code);
 
-    bool hasActiveFaults() const;
+    bool      hasActiveFaults() const;
+    FaultCode getActiveFault() const;  // Expose current fault for logging/telemetry
 
     // Optional periodic work; can be used to implement time-based fault
     // transitions or latching behavior.
     void update(SystemController &sys, unsigned long now);
 
-private:
+ private:
     FaultManager();
 
     FaultCode _activeFault;

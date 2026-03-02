@@ -1,6 +1,6 @@
 #pragma once
 
-#include "systemstate/SystemController.h"
+#include "core/SystemViewModel.h"
 
 // UiController
 // ------------
@@ -19,6 +19,6 @@ public:
     // Periodic update from RUN. Responsible for selecting the active UI
     // screen and issuing drawing commands based on the current system
     // state (normal vs error) and telemetry.
-    void update(SystemController &sys, unsigned long now);
+    void update(const SystemViewModel& vm, unsigned long now);
 };
 

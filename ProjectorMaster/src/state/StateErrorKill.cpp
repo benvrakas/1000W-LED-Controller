@@ -1,5 +1,5 @@
-#include "systemstate/StateErrorKill.h"
-#include "misc/BoardPins.h"
+#include "state/StateErrorKill.h"
+#include "util/BoardPins.h"
 #include "CanBus.h"
 
 #include <Arduino.h>

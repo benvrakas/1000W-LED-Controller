@@ -24,6 +24,10 @@ bool FaultManager::hasActiveFaults() const {
     return _activeFault != FaultCode::NONE;
 }
 
+FaultCode FaultManager::getActiveFault() const {
+    return _activeFault;
+}
+
 void FaultManager::update(SystemController &sys, unsigned long now) {
     (void)sys;
     (void)now;

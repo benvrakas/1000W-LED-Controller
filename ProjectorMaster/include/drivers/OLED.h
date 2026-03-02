@@ -2,7 +2,7 @@
 
 #include <Adafruit_SSD1306.h>
 #include <Wire.h>
-#include <BoardPins.h>
+#include "util/BoardPins.h"
 
 //Configure OLED Display
 namespace OLEDScreenConfig {
@@ -24,6 +24,10 @@ public:
     void showBootScreen(const char* version);
     void updateTelemetry(float voltage, float current, float temp);
     void showError(const char* msg);
+
+    // Expose underlying display for higher-level UI controllers. Callers
+    // must check for nullptr before use.
+    Adafruit_SSD1306* getDisplay() const { return _display; }
 
 private:
     uint8_t _address;

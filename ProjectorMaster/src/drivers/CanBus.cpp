@@ -1,5 +1,5 @@
 #include "CanBus.h"
-#include "BoardPins.h"
+#include "util/BoardPins.h"
 
 CanBusManager::CanBusManager(uint8_t txPin, uint8_t rxPin)
     : _txPin(txPin), _rxPin(rxPin), _backend(nullptr),

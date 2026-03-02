@@ -1,9 +1,10 @@
-#include "SystemController.h"
-#include "StateInit.h"
-#include "BoardPins.h"
-#include "Tachometers.h"
+#include "state/SystemController.h"
+#include "state/StateInit.h"
+#include "util/BoardPins.h"
+#include "drivers/Tachometers.h"
 #include "PowerButton.h"
 #include "OLED.h"
+#include "Encoder.h"
 #include "Encoder.h"
 
 //Handler Function Implementation
@@ -119,6 +120,9 @@ void SystemStartup::boardPinsInit() {
     // Encoder Sensor Setup
     pinMode(BoardPins::PIN_ENCODER_A, INPUT_PULLUP);
     pinMode(BoardPins::PIN_ENCODER_B, INPUT_PULLUP);
+
+    // Initialize encoder state once pins are configured
+    encoder.begin();
 
     // Power Button Setup
     pinMode(BoardPins::PIN_SW_BTN, INPUT_PULLUP);

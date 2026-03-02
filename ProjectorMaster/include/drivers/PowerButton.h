@@ -11,7 +11,12 @@ class PowerButtonManager {
         void begin();
 
         //Getters
+        // For v1, "armed" is equivalent to "system ON".
         bool isArmed() const;
+
+        // Call from the main loop/state machine with the current time.
+        // This handles long-press detection for ON and debounced OFF.
+        void update(unsigned long now);
 
         //ISR Support
         void handleButtonInterrupt();
@@ -21,7 +26,8 @@ class PowerButtonManager {
         uint8_t  _ledPin;
         volatile unsigned long _pressTimeStamp;
         volatile unsigned long _pressDuration;
-        volatile bool _armStatus;
+        volatile bool _buttonPressed; // true while physically held down
+        volatile bool _armStatus;      // true = ON, false = OFF
 
 };
 extern PowerButtonManager powerButton;

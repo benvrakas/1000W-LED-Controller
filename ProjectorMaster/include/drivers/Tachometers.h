@@ -77,16 +77,16 @@ class TachometerManager {
         //Constants
         unsigned long _computeInterval;
 
-            //Motor
-            uint8_t _minDeadStart;
-            uint16_t _maxRPM;
-            uint16_t _stallRPM;
-
-            //PID
+            //PID (declared first to match constructor init order)
             float _kp;
             float _ki;
             float _kd;
             float _alpha;
+
+            //Motor
+            uint8_t _minDeadStart;
+            uint16_t _maxRPM;
+            uint16_t _stallRPM;
 
         //Operational Variables
             //Motor

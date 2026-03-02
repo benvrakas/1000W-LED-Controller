@@ -1,14 +1,14 @@
 #include <Adafruit_SleepyDog.h>
-#include "SystemController.h"
-#include "StateInit.h"
-#include "StateRun.h"
-#include "StateErrorKill.h"
-#include "OLED.h"
-#include "CanBus.h"
-#include "Tachometers.h"
-#include "Thermistors.h"
-#include "Encoder.h"
-#include "PowerButton.h"
+#include "state/SystemController.h"
+#include "state/StateInit.h"
+#include "state/StateRun.h"
+#include "state/StateErrorKill.h"
+#include "drivers/OLED.h"
+#include "drivers/CanBus.h"
+#include "drivers/Tachometers.h"
+#include "drivers/Thermistors.h"
+#include "drivers/Encoder.h"
+#include "drivers/PowerButton.h"
 #include <Wire.h>
 
 // Secondary I2C bus for the OLED on SERCOM5 (A4/A5, PIO_SERCOM_ALT)

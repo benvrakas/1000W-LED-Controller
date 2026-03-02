@@ -8,7 +8,6 @@
 
 //Handler Function Implementation
 void handleInitState(SystemController &sys, unsigned long currentMillis) {
-    //Button interupt check
 
     //Define variables
     static SystemStartup startup; //Static so the compiler knows this is made once and information is retained even when we go out of handleInitState scope
@@ -207,7 +206,7 @@ void SystemStartup::isrInit() {
     //Detatch any existing ISRs to avoid conflicts during re-initialization
     detachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN));
 
-    
+
     // Attach ISRs after pins are configured
     //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PUMP_TACH), pumpISR, FALLING);
     //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_RAD_FAN_TACH), mainFanISR, FALLING);

@@ -1,5 +1,9 @@
 #include "state/SystemController.h"
 #include <Arduino.h>
+#include "drivers/CanBus.h"
+
+// Global PSU CAN manager instance from main.cpp
+extern CanBusManager psu;
 
 // SystemController Class Construction
 SystemController::SystemController()
@@ -37,9 +41,9 @@ void SystemController::transitionTo(SystemState newState) {
     Serial.print(F("State Transition: "));
     
     // Perform any "Cleanup" before switching
-    // Example: If leaving RUN, ensure the PSU is told to stop output
+    // If leaving RUN, ensure the PSU is told to stop output
     if (currentState == SystemState::RUN && newState == SystemState::ERROR_KILL) {
-        // psu.shutdown(); // Safety first
+        psu.setOperation(false);  // Disable PSU output over CAN
     }
 
     // Update the state

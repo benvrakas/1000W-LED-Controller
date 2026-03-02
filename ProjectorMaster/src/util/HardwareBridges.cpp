@@ -1,6 +1,6 @@
-#include "Tachometers.h"
-#include "PowerButton.h"
-#include "Encoder.h"
+#include "drivers/Tachometers.h"
+#include "drivers/PowerButton.h"
+#include "drivers/Encoder.h"
 #include <Arduino.h>
 
 //Bridge to connect ISR to class methods

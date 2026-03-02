@@ -66,7 +66,7 @@ This ensures UI and logging have no direct driver dependencies.
 | `EncoderManager` | `include/drivers/Encoder.h` | 600 PPR rotary encoder for power setpoint |
 | `PowerButtonManager` | `include/drivers/PowerButton.h` | Illuminated latching button (3s hold on, tap off) |
 | `CanBusManager` | `include/drivers/CanBus.h` | CAN 2.0B interface to Mean Well PSU |
-| `TachometerManager` | `include/drivers/Tachometers.h` | PWM + tach for fans/pump with PID control |
+| `TachometerManager` | `include/drivers/Tachometers.h` | PWM + tach for fans/pump (fan curve driven) |
 | `ThermistorManager` | `include/drivers/Thermistors.h` | NTC thermistors (LED junction, water loop) |
 | `OledManager` | `include/drivers/OLED.h` | 128x32 SSD1306 OLED display |
 
@@ -113,7 +113,7 @@ include/
 ├── services/       # Domain services (InputService, PsuService, CoolingService)
 ├── drivers/        # Hardware abstractions
 ├── logging/        # FaultManager, ErrorLogger
-├── util/           # BoardPins, PID, ThermalCurve
+├── util/           # BoardPins, HardwareBridges
 ├── state/    # State machine (INIT, RUN, ERROR_KILL)
 └── ui/             # UiController
 

@@ -32,7 +32,9 @@ namespace BoardPins {
     static constexpr uint8_t PIN_AUX_FAN_TACH = 16;  // D16/SPARE: Aux/Lens Cooling Fan RPM Feedback
 
     // ---CAN + OLED I2C Pins---
-    // CAN transceiver (ISO1050) lives on the original SDA/SCL pins
+    // MCP2515 SPI CAN controller (SPI bus with dedicated CS)
+    static constexpr uint8_t PIN_CAN_CS   = 9;   // D9: MCP2515 chip select
+    // Legacy pin names (for transceiver-based designs)
     static constexpr uint8_t PIN_CAN_TX   = SDA; // D11
     static constexpr uint8_t PIN_CAN_RX   = SCL; // D12
 

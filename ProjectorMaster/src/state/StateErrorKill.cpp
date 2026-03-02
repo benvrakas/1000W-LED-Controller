@@ -1,6 +1,6 @@
 #include "state/StateErrorKill.h"
 #include "util/BoardPins.h"
-#include "CanBus.h"
+#include "drivers/CanBus.h"
 
 #include <Arduino.h>
 

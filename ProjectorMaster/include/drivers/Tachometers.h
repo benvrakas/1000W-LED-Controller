@@ -3,113 +3,75 @@
 #include <Arduino.h>
 
 namespace TachometerConfig {
-    //Deadstart Duty Cycles
+    // Deadstart Duty Cycles (minimum PWM to start spinning)
     static constexpr uint8_t  MAIN_PSU_DEADSTART_DUTY = 77;
     static constexpr uint8_t  AUX_DEADSTART_DUTY = 26;
     static constexpr uint8_t  PUMP_DEADSTART_DUTY = 127;
 
-    //Computation Intervals
-    static constexpr unsigned long MAIN_COMPUTE_INTERVAL = 500;
-    static constexpr unsigned long PSU_COMPUTE_INTERVAL = 100;
-    static constexpr unsigned long AUX_COMPUTE_INTERVAL = 200;
-    static constexpr unsigned long PUMP_COMPUTE_INTERVAL = 200;
+    // RPM Computation Intervals (milliseconds)
+    static constexpr unsigned long RPM_COMPUTE_INTERVAL = 200;
 
-    //RPM Limits
+    // RPM Limits (for scaling/clamping)
     static constexpr uint16_t MAX_MAIN_PSU_RPM = 3000;
     static constexpr uint16_t MAX_AUX_RPM = 6000;
     static constexpr uint16_t MAX_PUMP_RPM = 4800;
 
-    //Stall Limits
+    // Stall Detection Thresholds (RPM below this with duty > 0 = stall)
     static constexpr uint16_t MAIN_PSU_STALL_RPM = 300;
     static constexpr uint16_t AUX_STALL_RPM = 300;
     static constexpr uint16_t PUMP_STALL_RPM = 150;
+}
 
-    //PID Constants
-        //Radiator Fans
-        static constexpr float MAIN_KP = 0.2f;
-        static constexpr float MAIN_KI = 0.03f;
-        static constexpr float MAIN_KD = 0.1f;
-
-        //PSU Fan
-        static constexpr float PSU_KP = 0.2f;
-        static constexpr float PSU_KI = 0.03f;
-        static constexpr float PSU_KD = 0.1f;
-
-        //Pump
-        static constexpr float PUMP_KP = 0.15f;
-        static constexpr float PUMP_KI = 0.02f;
-        static constexpr float PUMP_KD = 0.05f; 
-
-    //Low Pass Filtter Alpha Values
-    static constexpr float MAIN_ALPHA = 0.15f;
-    static constexpr float PSU_ALPHA = 0.5f;
-    static constexpr float PUMP_ALPHA = 0.3f;
-
-    }
-
+// ---------------------------------------------------------------------------
+// TachometerManager - PWM output + tachometer RPM feedback (no PID)
+// Fan/pump speed is controlled via setDuty() based on external fan curves.
+// ---------------------------------------------------------------------------
 class TachometerManager {
-    public:
-        //Class Construction
-        TachometerManager(uint8_t pwmPin, uint8_t tachPin, unsigned long computeInterval, 
-            float kp, float ki, float kd, float alpha, uint8_t minDeadStart, uint16_t maxRPM, uint16_t stallRPM);
+public:
+    // Constructor: pwmPin, tachPin, minDeadStart duty, maxRPM, stallRPM threshold
+    TachometerManager(uint8_t pwmPin, uint8_t tachPin,
+                      uint8_t minDeadStart, uint16_t maxRPM, uint16_t stallRPM);
 
-        //Initialization
-        void begin();
+    // Initialize PWM and tach pins
+    void begin();
 
-        //Getters
-        uint16_t getRPM() const; 
-        uint8_t getDuty() const;
-        uint32_t getPulseCount() const;
-        bool getStallStatus() const; // Returns true if PWM > 0 but RPM is 0
+    // Set PWM duty cycle (0–255)
+    void setDuty(uint8_t duty);
 
-        //Emergency Stops
-        void stop();                
-        void stopSlow();
+    // Getters
+    uint16_t getRPM() const;
+    uint8_t  getDuty() const;
+    uint32_t getPulseCount() const;
+    bool     getStallStatus() const;  // true if duty > 0 but RPM below stall threshold
 
-        //ISR Support (Needs to be public or handled via a static wrapper)
-        void handleTachoInterrupt();
+    // Emergency stops
+    void stop();       // Immediate stop (duty = 0)
+    void stopSlow();   // Gradual ramp-down
 
-    private:
-        //Hardware Pins
-        uint8_t _pwmPin;
-        uint8_t _tachPin;
-        
-        //Constants
-        unsigned long _computeInterval;
+    // ISR callback (public for static wrapper)
+    void handleTachoInterrupt();
 
-            //PID (declared first to match constructor init order)
-            float _kp;
-            float _ki;
-            float _kd;
-            float _alpha;
+    // Call from main loop to update RPM calculation
+    void update(unsigned long currentMillis);
 
-            //Motor
-            uint8_t _minDeadStart;
-            uint16_t _maxRPM;
-            uint16_t _stallRPM;
+private:
+    // Hardware pins
+    uint8_t _pwmPin;
+    uint8_t _tachPin;
 
-        //Operational Variables
-            //Motor
-            uint8_t  _currentDuty;
-            volatile uint32_t _pulseCount; // volatile because it changes in interrupt
-            uint16_t _currentRPM;
+    // Configuration
+    uint8_t  _minDeadStart;
+    uint16_t _maxRPM;
+    uint16_t _stallRPM;
 
-            //PID
-            float _integral;
-            float _lastError;
-            float _lastPID;
-            float _filteredDerivative;
-            
-            //Last Computation Times
-            unsigned long _lastRPMCompute;
-            unsigned long _lastPWMCompute;
-            unsigned long _lastPIDCompute;
+    // Runtime state
+    uint8_t  _currentDuty;
+    volatile uint32_t _pulseCount;  // incremented in ISR
+    uint16_t _currentRPM;
+    unsigned long _lastRPMCompute;
 
-        //Calculation
-        void calculateRPM(unsigned long currentMillis);
-        void calculatePWM(unsigned long currentMillis);
-        void calculatePID(unsigned long currentMillis, uint16_t sv, uint16_t pv);
-        
+    // Internal RPM calculation
+    void calculateRPM(unsigned long currentMillis);
 };
 
 //Extern declarations for global TachometerManager instances

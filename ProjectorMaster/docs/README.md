@@ -16,20 +16,18 @@ Main Logic Structure:
         PM Bus - Millis(50)
             Current controlled - Max = 20.8333
     Slow Systems
-        Main Fan PWM - Millis(100) - PID Tuned, using water temp readings
-        Aux Fan PWM - Millis(20) - PWM = Brightness level --Compare encoder min-max to a value that can be
-            represented 0-255
-        PSU Fan PWM - Millis(20) - PID Tuned, using pmbus temp readings
-        Pump PWM - Millis(20) - PID Tuned, using led temp readings (EK-D5 Vario Motor 12-24V DC Pump Motor)
+        Main Fan PWM - Millis(100) - Fan curve based on water temp readings
+        Aux Fan PWM - Millis(20) - PWM = Brightness level (linked to encoder position)
+        PSU Fan PWM - Millis(20) - Fan curve based on LED temp readings  
+        Pump PWM - Millis(20) - Fan curve based on LED temp readings (EK-D5 Vario Motor 12-24V DC Pump Motor)
         Thermistor Ideal Reading
             50c for water - Millis(100)
-            75 for led - Millis(20)
-        Oled updates
-        PID Tuning -This needs to be it's own class, not every Tach instance needs this information
-            Calculate RPM
-            Take Thermal reading
-            Calculate PID
-            Calculate PWM
+            75c for LED - Millis(20)
+        OLED updates
+        Fan Curves - Temperature-to-duty mapping via CoolingService
+            Read thermistor temperatures
+            Map temperature to PWM duty cycle
+            Apply duty via TachometerManager.setDuty()
 
 
         /**

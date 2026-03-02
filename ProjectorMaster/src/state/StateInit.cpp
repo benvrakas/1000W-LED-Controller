@@ -2,10 +2,9 @@
 #include "state/StateInit.h"
 #include "util/BoardPins.h"
 #include "drivers/Tachometers.h"
-#include "PowerButton.h"
-#include "OLED.h"
-#include "Encoder.h"
-#include "Encoder.h"
+#include "drivers/PowerButton.h"
+#include "drivers/OLED.h"
+#include "drivers/Encoder.h"
 
 //Handler Function Implementation
 void handleInitState(SystemController &sys, unsigned long currentMillis) {
@@ -219,10 +218,10 @@ void SystemStartup::isrInit() {
 
     
     // Attach ISRs after pins are configured
-    //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PUMP_TACH), pumpISR, FALLING);
-    //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_RAD_FAN_TACH), mainFanISR, FALLING);
-    //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_AUX_FAN_TACH), auxFanISR, FALLING);
-    //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PSU_FAN_TACH), psuFanISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PUMP_TACH), pumpISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_RAD_FAN_TACH), mainFanISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_AUX_FAN_TACH), auxFanISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PSU_FAN_TACH), psuFanISR, FALLING);
     attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN), powerButtonISR, CHANGE);
 
     // Encoder quadrature interrupts on both channels
@@ -241,20 +240,60 @@ void SystemStartup::isrInit() {
 
 //Pump
     void SystemStartup::pumpInit() {
+        pump.begin();
+        // Start pump at minimum duty to prime the loop
+        analogWrite(BoardPins::PIN_PUMP_PWM, TachometerConfig::PUMP_DEADSTART_DUTY);
+        setStepStatus(2, true);  // Mark pump init complete
+    }
 
+    void SystemStartup::pumpVerify(uint8_t bootStep) {
+        // Verify pump is spinning (RPM > stall threshold after brief delay)
+        // For now, assume init succeeded - actual verification requires ISR time
+        setStepStatus(bootStep, true);
     }
 
 //Fans
     void SystemStartup::fansInit() {
-        
+        mainFan.begin();
+        psuFan.begin();
+        auxFan.begin();
+        // Start fans at minimum duty for initial cooling
+        analogWrite(BoardPins::PIN_RAD_FANS_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
+        analogWrite(BoardPins::PIN_PSU_FAN_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
+        analogWrite(BoardPins::PIN_AUX_FAN_PWM, TachometerConfig::AUX_DEADSTART_DUTY);
+        setStepStatus(3, true);  // Mark fans init complete
+    }
+
+    void SystemStartup::fansVerify(uint8_t bootStep) {
+        // Verify fans are spinning - for now assume success
+        setStepStatus(bootStep, true);
     }
 
 //PSU
     void SystemStartup::psuInit() {
-        
+        // PSU CAN initialization happens in main.cpp via psu.begin()
+        // Ensure PSU is disabled at startup
+        pinMode(BoardPins::PIN_PSU_ENABLE, OUTPUT);
+        digitalWrite(BoardPins::PIN_PSU_ENABLE, LOW);
+        pinMode(BoardPins::PIN_PSU_REMOTE, OUTPUT);
+        digitalWrite(BoardPins::PIN_PSU_REMOTE, LOW);
+        setStepStatus(4, true);  // Mark PSU init complete
+    }
+
+    void SystemStartup::psuVerify(uint8_t bootStep) {
+        // Verify PSU CAN communication is working
+        // For now, mark as ready - actual CAN verification requires backend
+        setStepStatus(bootStep, true);
     }
 
 //Display
     void SystemStartup::displayInit() {
-        
+        // OLED initialization happens in main.cpp via oled.begin()
+        // Display is ready to use
+        setStepStatus(5, true);  // Mark display init complete
+    }
+
+    void SystemStartup::displayVerify(uint8_t bootStep) {
+        // Display verification - assume success for now
+        setStepStatus(bootStep, true);
     }

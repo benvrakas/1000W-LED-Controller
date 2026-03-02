@@ -4,10 +4,17 @@
 
 #include "util/BoardPins.h"
 #include "drivers/Thermistors.h"
+#include "drivers/Tachometers.h"
 
 // Global thermistor instances from main.cpp
 extern ThermistorManager ledThermistor;
 extern ThermistorManager pumpThermistor;
+
+// Global tachometer instances from main.cpp
+extern TachometerManager mainFan;
+extern TachometerManager auxFan;
+extern TachometerManager psuFan;
+extern TachometerManager pump;
 
 // Helper: map a temperature into an 8-bit duty cycle with clamping.
 static uint8_t mapTempToDuty(float tempC,
@@ -39,9 +46,13 @@ void CoolingService::begin() {
 }
 
 void CoolingService::update(unsigned long now) {
-    (void)now;
+    // 1) Update tachometer RPM calculations
+    mainFan.update(now);
+    auxFan.update(now);
+    psuFan.update(now);
+    pump.update(now);
 
-    // 1) Read current temperatures from thermistor managers
+    // 2) Read current temperatures from thermistor managers
     float ledTempC   = ledThermistor.getCelsius();
     float waterTempC = pumpThermistor.getCelsius();
 
@@ -49,7 +60,7 @@ void CoolingService::update(unsigned long now) {
     _state.ledTempC   = ledTempC;
     _state.waterTempC = waterTempC;
 
-    // 2) Compute PWM duties
+    // 3) Compute PWM duties using fan curves (temperature-based)
 
     // Radiator fans + PSU fan driven primarily by LED temperature.
     // Quiet (~25%) below 35C, ramping to full by 75C.
@@ -58,11 +69,11 @@ void CoolingService::update(unsigned long now) {
         35.0f, 75.0f,   // temperature window
         64, 255         // duty window (~25% to 100%)
     );
+    mainFan.setDuty(mainFanDuty);
 
-    uint8_t psuFanDuty = mainFanDuty; // tie PSU fan to main curve for v1
-
-    analogWrite(BoardPins::PIN_RAD_FANS_PWM, mainFanDuty);
-    analogWrite(BoardPins::PIN_PSU_FAN_PWM,  psuFanDuty);
+    // PSU fan tied to same curve as radiator fans
+    uint8_t psuFanDuty = mainFanDuty;
+    psuFan.setDuty(psuFanDuty);
 
     // Pump driven by water temperature.
     // Baseline ~30% at 30C, ramp to full by 50C.
@@ -71,7 +82,7 @@ void CoolingService::update(unsigned long now) {
         30.0f, 50.0f,
         77, 255  // ~30% to 100%
     );
-    analogWrite(BoardPins::PIN_PUMP_PWM, pumpDuty);
+    pump.setDuty(pumpDuty);
 
     // Aux (lens) fan based on LED temperature for now.
     // Baseline ~20% at 30C, ramp to full by 75C.
@@ -80,11 +91,11 @@ void CoolingService::update(unsigned long now) {
         30.0f, 75.0f,
         51, 255  // ~20% to 100%
     );
-    analogWrite(BoardPins::PIN_AUX_FAN_PWM, auxDuty);
+    auxFan.setDuty(auxDuty);
 
-    // 3) For v1, RPMs are not yet measured in this path; leave at 0.
-    _state.mainFanRPM = 0;
-    _state.auxFanRPM  = 0;
-    _state.psuFanRPM  = 0;
-    _state.pumpRPM    = 0;
+    // 4) Read RPM values from tachometer managers
+    _state.mainFanRPM = mainFan.getRPM();
+    _state.auxFanRPM  = auxFan.getRPM();
+    _state.psuFanRPM  = psuFan.getRPM();
+    _state.pumpRPM    = pump.getRPM();
 }

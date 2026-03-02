@@ -4,7 +4,7 @@
 
 enum class SystemState {
     INIT,       // System is booting
-    ONOFF,    // Normal operation
+    RUN,        // Normal operation
     ERROR_KILL   // Critical error or hang up occured and system shut down
 };
 
@@ -16,7 +16,7 @@ struct InitData {
     bool systemError;
 };
 
-struct OnOffData {
+struct RunData {
     unsigned long lastStepTime;
     bool systemError;
 };
@@ -48,7 +48,7 @@ struct SystemController {
     // Saves data by not reserving memory for every struct all the time
     union {
         InitData init;
-        OnOffData onoff;
+        RunData run;
         ErrorKillData error;
     } stateData; // Variable holds data for current state
 };
@@ -56,4 +56,4 @@ struct SystemController {
 // Handle function prototypes for SystemController object (sys), see main.cpp and SystemController.cpp 
 void handleErrorKillState(SystemController &sys, unsigned long now);
 void handleInitState(SystemController &sys, unsigned long now);
-void handleOnOffState(SystemController &sys, unsigned long now);
+void handleRunState(SystemController &sys, unsigned long now);

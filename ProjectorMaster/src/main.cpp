@@ -1,14 +1,22 @@
 #include <Adafruit_SleepyDog.h>
 #include "SystemController.h"
 #include "StateInit.h"
-#include "StateOnOff.h"
+#include "StateRun.h"
 #include "StateErrorKill.h"
 #include "OLED.h"
-#include "PMBus.h"
+#include "CanBus.h"
 #include "Tachometers.h"
 #include "Thermistors.h"
 #include "Encoder.h"
 #include "PowerButton.h"
+#include <Wire.h>
+
+// Secondary I2C bus for the OLED on SERCOM5 (A4/A5, PIO_SERCOM_ALT)
+TwoWire oledWire(&sercom5, BoardPins::PIN_OLED_SDA, BoardPins::PIN_OLED_SCL);
+
+void SERCOM5_Handler() {
+    oledWire.onService();
+}
 
 //Initialize System Controller
 SystemController sys;
@@ -42,16 +50,25 @@ ThermistorManager ledThermistor(BoardPins::PIN_THERM_LED, ThermistorConfig::BETA
 ThermistorManager pumpThermistor(BoardPins::PIN_THERM_WATER, ThermistorConfig::BETA_VALUE_PUMP, 
     ThermistorConfig::SERIES_RESISTOR_PUMP);
 
-//Initialize PMBus
-PMBusManager psu(BoardPins::PIN_I2C_SDA, BoardPins::PIN_I2C_SCL, PMBusConfig::DEFAULT_ADDRESS);
+//Initialize CANBus PSU Manager (Mean Well UHP-1500-48)
+CanBusManager psu(BoardPins::PIN_CAN_TX, BoardPins::PIN_CAN_RX);
 
-//Initialize OLED Display
-OledManager oled(BoardPins::PIN_I2C_SDA, BoardPins::PIN_I2C_SCL, OLEDScreenConfig::DEFAULT_ADDRESS,
-    OLEDScreenConfig::SCREEN_WIDTH,OLEDScreenConfig::SCREEN_HEIGHT);
+//Initialize OLED Display on secondary I2C bus (A4/A5 via SERCOM5)
+OledManager oled(BoardPins::PIN_OLED_SDA, BoardPins::PIN_OLED_SCL, OLEDScreenConfig::DEFAULT_ADDRESS,
+    OLEDScreenConfig::SCREEN_WIDTH, OLEDScreenConfig::SCREEN_HEIGHT);
 
 void setup() {
     Watchdog.enable(1000); //How long??? Probably longer than our Logic Watchdogs
     Serial.begin(115200);
+
+    // Bring up the dedicated OLED I2C bus
+    oledWire.begin();
+    oledWire.setClock(OLEDScreenConfig::BUS_SPEED);
+    oled.begin(&oledWire);
+
+    // NOTE: A concrete CAN backend should be created and passed into
+    // psu.begin(...) here once a specific CAN library is selected.
+
     sys.begin();
 }
 

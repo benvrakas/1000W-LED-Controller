@@ -4,7 +4,7 @@
 #include "Tachometers.h"
 #include "PowerButton.h"
 #include "OLED.h"
-#include "PMBus.h"
+#include "Encoder.h"
 
 //Handler Function Implementation
 void handleInitState(SystemController &sys, unsigned long currentMillis) {
@@ -64,10 +64,10 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
 
         case 6: //Final check
-            
+
             if (data.systemReady) {
-                sys.transitionTo(SystemState::ONOFF);
-            } 
+                sys.transitionTo(SystemState::RUN);
+            }
             break;
 
         default: //Illegal boot step or error got flagged, assume error
@@ -142,15 +142,21 @@ void SystemStartup::boardPinsInit() {
     pinMode(BoardPins::PIN_AUX_FAN_PWM, OUTPUT);
     digitalWrite(BoardPins::PIN_AUX_FAN_PWM, LOW);
 
+    // PSU Remote ON/OFF (via N-MOSFET on UHP-1500 remote pin)
+    pinMode(BoardPins::PIN_PSU_ENABLE, OUTPUT);
+    digitalWrite(BoardPins::PIN_PSU_ENABLE, LOW);
+
+    pinMode(BoardPins::PIN_PSU_REMOTE, OUTPUT);
+    digitalWrite(BoardPins::PIN_PSU_REMOTE, LOW);
+
     // Tachometer Inputs
     pinMode(BoardPins::PIN_RAD_FAN_TACH, INPUT);
     pinMode(BoardPins::PIN_PUMP_TACH, INPUT);
     pinMode(BoardPins::PIN_PSU_FAN_TACH, INPUT);
     pinMode(BoardPins::PIN_AUX_FAN_TACH, INPUT);
 
-    // Startup I2C Connection
-    Wire.begin(BoardPins::PIN_I2C_SDA, BoardPins::PIN_I2C_SCL);
-    Wire.setClock(PMBusConfig::BUS_SPEED);  
+    // NOTE: The PSU now uses CANBus. The OLED resides on a dedicated I2C bus
+    // (SERCOM5 on A4/A5) that is initialized separately in the display init path.
 }
 
 // Verify the safe connection settings
@@ -214,6 +220,10 @@ void SystemStartup::isrInit() {
     //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_AUX_FAN_TACH), auxFanISR, FALLING);
     //attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PSU_FAN_TACH), psuFanISR, FALLING);
     attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN), powerButtonISR, CHANGE);
+
+    // Encoder quadrature interrupts on both channels
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_ENCODER_A), encoderAISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_ENCODER_B), encoderBISR, CHANGE);
 
     // Set priority of EIC channels
     NVIC_SetPriority(BoardPins::EIC_CHANNEL_BUTTON, BoardPins::EIC_PRIORITY_BUTTON);

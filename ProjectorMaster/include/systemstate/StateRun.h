@@ -36,3 +36,4 @@ private:
         //Encoder
         void checkEncoderInput();
 };
+

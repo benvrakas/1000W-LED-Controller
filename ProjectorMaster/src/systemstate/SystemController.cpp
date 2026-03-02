@@ -22,8 +22,8 @@ void SystemController::update() {
             handleInitState(*this, millis()); // Pass this specific instance and global time to the handler
             break;
 
-        case SystemState::ONOFF:
-            handleOnOffState(*this, millis());
+        case SystemState::RUN:
+            handleRunState(*this, millis());
             break;
 
         case SystemState::ERROR_KILL:
@@ -37,8 +37,8 @@ void SystemController::transitionTo(SystemState newState) {
     Serial.print(F("State Transition: "));
     
     // Perform any "Cleanup" before switching
-    // Example: If leaving ONOFF, ensure the PSU is told to stop output
-    if (currentState == SystemState::ONOFF && newState == SystemState::ERROR_KILL) {
+    // Example: If leaving RUN, ensure the PSU is told to stop output
+    if (currentState == SystemState::RUN && newState == SystemState::ERROR_KILL) {
         // psu.shutdown(); // Safety first
     }
 

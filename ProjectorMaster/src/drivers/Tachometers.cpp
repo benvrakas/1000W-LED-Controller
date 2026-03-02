@@ -13,9 +13,12 @@ TachometerManager::TachometerManager(uint8_t pwmPin, uint8_t tachPin, unsigned l
         //Initialization
         void TachometerManager::begin() {
             pinMode(_pwmPin, OUTPUT);
-            pinMode(_tachPin, INPUT_PULLUP);
+
+            // New hardware: tach signals are push-pull CMOS from ADuM isolators,
+            // already referenced to the clean 3.3 V domain. No pull-up required.
+            pinMode(_tachPin, INPUT);
+
             analogWriteResolution(8);
-            
         }
 
         //Getters

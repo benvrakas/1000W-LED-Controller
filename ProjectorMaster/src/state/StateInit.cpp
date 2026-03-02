@@ -15,7 +15,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
 
     //Define variables
     static SystemStartup startup; //Static so the compiler knows this is made once and information is retained even when we go out of handleInitState scope
-    auto &data = sys.stateData.init; 
+    auto &data = sys.initData; 
     
     //Switch statement where we go through all init steps and verify they are safe
     switch (data.bootStep) {

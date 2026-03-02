@@ -15,8 +15,10 @@ SystemController::SystemController(AppContext& ctx)
 
 // 1. Set initial machine state cleanly
 void SystemController::begin() {
-    // Clear the union memory to start clean
-    memset(&stateData, 0, sizeof(stateData));
+    // Initialize state data structures
+    initData = {};
+    runData = {};
+    errorData = {};
 }
 
 // 2. The Main State Machine Loop
@@ -51,7 +53,10 @@ void SystemController::transitionTo(SystemState newState) {
     // Update the state
     currentState = newState;
 
-    // IMPORTANT: Clear the Union!
-    // This wipes the memory of the old state so the new state starts fresh.
-    memset(&stateData, 0, sizeof(stateData));
+    // Initialize the data for the new state
+    switch (newState) {
+        case SystemState::INIT:       initData = {}; break;
+        case SystemState::RUN:        runData = {}; break;
+        case SystemState::ERROR_KILL: errorData = {}; break;
+    }
 }

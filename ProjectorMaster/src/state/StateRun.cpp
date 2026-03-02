@@ -82,7 +82,7 @@ void handleRunState(SystemController &sys, unsigned long now) {
 
     // 4. Update fault model and log any new events
     FaultManager::instance().update(sys, now);
-    ErrorLogger::instance().update(sys.currentState, vm, now);
+    ErrorLogger::instance().update(sys, vm, now);
 
     // 5. Update the power button LED to reflect armed/ON state
     sys.input.setButtonLed(armed);

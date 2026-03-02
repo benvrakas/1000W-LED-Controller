@@ -53,7 +53,7 @@ void ErrorLogger::appendRecord(const LogRecord &record) {
     if (logFile) {
         // If file is empty, write header
         if (logFile.size() == 0) {
-            logFile.println("Time,Fault,State,LED_C,Water_C,MainRPM,AuxRPM,PsuRPM,PumpRPM,Volts,Amps,Watts");
+            logFile.println("Time,Fault,State,BootStep,LED_C,Water_C,MainRPM,AuxRPM,PsuRPM,PumpRPM,Volts,Amps,Watts");
         }
 
         logFile.print(record.timestampMs);
@@ -61,6 +61,8 @@ void ErrorLogger::appendRecord(const LogRecord &record) {
         logFile.print(static_cast<int>(record.fault));
         logFile.print(",");
         logFile.print(static_cast<int>(record.state));
+        logFile.print(",");
+        logFile.print(record.bootStep);
         logFile.print(",");
         
         logFile.print(record.ledTempC);
@@ -87,7 +89,7 @@ void ErrorLogger::appendRecord(const LogRecord &record) {
     }
 }
 
-void ErrorLogger::update(SystemState state, const SystemViewModel& vm, unsigned long now) {
+void ErrorLogger::update(const SystemController& sys, const SystemViewModel& vm, unsigned long now) {
     FaultManager &fm = FaultManager::instance();
 
     if (!fm.hasActiveFaults()) {
@@ -105,7 +107,8 @@ void ErrorLogger::update(SystemState state, const SystemViewModel& vm, unsigned 
     LogRecord rec = {};
     rec.timestampMs = now;
     rec.fault       = currentFault;
-    rec.state       = state;
+    rec.state       = sys.currentState;
+    rec.bootStep    = sys.initData.bootStep;
 
     // Snapshot telemetry from the view model
     rec.ledTempC    = vm.ledTempC;

@@ -59,11 +59,10 @@ struct SystemController {
 
     // Reserve an amount of memory equal to the largest member (machine state) but only store one member at a time
     // Saves data by not reserving memory for every struct all the time
-    union {
-        InitData init;
-        RunData run;
-        ErrorKillData error;
-    } stateData; // Variable holds data for current state
+    // Union removed to allow persistent state data for logging and simplified transition logic
+    InitData initData;
+    RunData runData;
+    ErrorKillData errorData;
 };
 
 // Handle function prototypes for SystemController object (sys), see main.cpp and SystemController.cpp 

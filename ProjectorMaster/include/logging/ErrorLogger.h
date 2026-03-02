@@ -19,6 +19,7 @@ class ErrorLogger {
         unsigned long timestampMs;   // millis() at time of log
         FaultCode      fault;        // Fault that triggered this record
         SystemState    state;        // High-level system state
+        uint8_t        bootStep;     // Boot step if in INIT (0 otherwise)
 
         // Snapshot of key telemetry at the time of the fault
         float    ledTempC;
@@ -42,7 +43,7 @@ class ErrorLogger {
     // Periodic update: detect new faults from FaultManager and append
     // structured log records to persistent storage (or in-RAM buffer for
     // this iteration). Receives system state and a view model snapshot.
-    void update(SystemState state, const SystemViewModel& vm, unsigned long now);
+    void update(const SystemController& sys, const SystemViewModel& vm, unsigned long now);
 
  private:
     ErrorLogger();

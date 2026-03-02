@@ -5,16 +5,7 @@
 #include "util/BoardPins.h"
 #include "drivers/Thermistors.h"
 #include "drivers/Tachometers.h"
-
-// Global thermistor instances from main.cpp
-extern ThermistorManager ledThermistor;
-extern ThermistorManager pumpThermistor;
-
-// Global tachometer instances from main.cpp
-extern TachometerManager mainFan;
-extern TachometerManager auxFan;
-extern TachometerManager psuFan;
-extern TachometerManager pump;
+#include "config/FanCurves.h"
 
 // Helper: map a temperature into an 8-bit duty cycle with clamping.
 static uint8_t mapTempToDuty(float tempC,
@@ -37,8 +28,13 @@ static uint8_t mapTempToDuty(float tempC,
     return static_cast<uint8_t>(duty + 0.5f);
 }
 
-CoolingService::CoolingService()
-    : _state{} {}
+CoolingService::CoolingService(TachometerManager& mainFan, TachometerManager& psuFan,
+                               TachometerManager& pump, TachometerManager& auxFan,
+                               ThermistorManager& ledThermistor, ThermistorManager& pumpThermistor)
+    : _mainFan(mainFan), _psuFan(psuFan), _pump(pump), _auxFan(auxFan),
+      _ledThermistor(ledThermistor), _pumpThermistor(pumpThermistor),
+      _state{}
+{}
 
 void CoolingService::begin() {
     // Ensure PWM writes use 8-bit resolution for all fan/pump channels.
@@ -47,14 +43,14 @@ void CoolingService::begin() {
 
 void CoolingService::update(unsigned long now) {
     // 1) Update tachometer RPM calculations
-    mainFan.update(now);
-    auxFan.update(now);
-    psuFan.update(now);
-    pump.update(now);
+    _mainFan.update(now);
+    _auxFan.update(now);
+    _psuFan.update(now);
+    _pump.update(now);
 
     // 2) Read current temperatures from thermistor managers
-    float ledTempC   = ledThermistor.getCelsius();
-    float waterTempC = pumpThermistor.getCelsius();
+    float ledTempC   = _ledThermistor.getCelsius();
+    float waterTempC = _pumpThermistor.getCelsius();
 
     // Store in internal state for external access via getState()
     _state.ledTempC   = ledTempC;
@@ -63,39 +59,36 @@ void CoolingService::update(unsigned long now) {
     // 3) Compute PWM duties using fan curves (temperature-based)
 
     // Radiator fans + PSU fan driven primarily by LED temperature.
-    // Quiet (~25%) below 35C, ramping to full by 75C.
     uint8_t mainFanDuty = mapTempToDuty(
         ledTempC,
-        35.0f, 75.0f,   // temperature window
-        64, 255         // duty window (~25% to 100%)
+        FanCurveConfig::MAIN_TEMP_MIN, FanCurveConfig::MAIN_TEMP_MAX,
+        FanCurveConfig::MAIN_DUTY_MIN, FanCurveConfig::MAIN_DUTY_MAX
     );
-    mainFan.setDuty(mainFanDuty);
+    _mainFan.setDuty(mainFanDuty);
 
     // PSU fan tied to same curve as radiator fans
     uint8_t psuFanDuty = mainFanDuty;
-    psuFan.setDuty(psuFanDuty);
+    _psuFan.setDuty(psuFanDuty);
 
     // Pump driven by water temperature.
-    // Baseline ~30% at 30C, ramp to full by 50C.
     uint8_t pumpDuty = mapTempToDuty(
         waterTempC,
-        30.0f, 50.0f,
-        77, 255  // ~30% to 100%
+        FanCurveConfig::PUMP_TEMP_MIN, FanCurveConfig::PUMP_TEMP_MAX,
+        FanCurveConfig::PUMP_DUTY_MIN, FanCurveConfig::PUMP_DUTY_MAX
     );
-    pump.setDuty(pumpDuty);
+    _pump.setDuty(pumpDuty);
 
     // Aux (lens) fan based on LED temperature for now.
-    // Baseline ~20% at 30C, ramp to full by 75C.
     uint8_t auxDuty = mapTempToDuty(
         ledTempC,
-        30.0f, 75.0f,
-        51, 255  // ~20% to 100%
+        FanCurveConfig::AUX_TEMP_MIN, FanCurveConfig::AUX_TEMP_MAX,
+        FanCurveConfig::AUX_DUTY_MIN, FanCurveConfig::AUX_DUTY_MAX
     );
-    auxFan.setDuty(auxDuty);
+    _auxFan.setDuty(auxDuty);
 
     // 4) Read RPM values from tachometer managers
-    _state.mainFanRPM = mainFan.getRPM();
-    _state.auxFanRPM  = auxFan.getRPM();
-    _state.psuFanRPM  = psuFan.getRPM();
-    _state.pumpRPM    = pump.getRPM();
+    _state.mainFanRPM = _mainFan.getRPM();
+    _state.auxFanRPM  = _auxFan.getRPM();
+    _state.psuFanRPM  = _psuFan.getRPM();
+    _state.pumpRPM    = _pump.getRPM();
 }

@@ -1,6 +1,11 @@
 #pragma once
 
 #include <Arduino.h>
+#include "core/AppContext.h"
+#include "services/CoolingService.h"
+#include "services/PsuService.h"
+#include "services/InputService.h"
+#include "ui/UiController.h"
 
 enum class SystemState {
     INIT,       // System is booting
@@ -27,7 +32,15 @@ struct ErrorKillData {
 
 //High level controller that changes machine states
 struct SystemController {
-    SystemController();
+    SystemController(AppContext& context);
+
+    // Dependencies & Services
+    AppContext&    context;
+    CoolingService cooling;
+    PsuService     psu;
+    InputService   input;
+    UiController   ui;
+
     SystemState currentState;
     // Persistantly saved state data, available to all states
     float globalLedTemp;

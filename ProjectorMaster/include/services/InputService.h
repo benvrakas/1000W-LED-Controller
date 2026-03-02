@@ -19,7 +19,7 @@
 
 class InputService {
 public:
-    InputService();
+    InputService(EncoderManager& encoder, PowerButtonManager& powerButton);
 
     void begin();
     void update(unsigned long now);
@@ -40,6 +40,9 @@ public:
     void setButtonLed(bool on);
 
 private:
+    EncoderManager&     _encoder;
+    PowerButtonManager& _powerButton;
+
     bool  _armed;
     bool  _prevArmed;
     bool  _edgeArmedOn;

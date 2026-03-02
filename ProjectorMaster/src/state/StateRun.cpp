@@ -21,47 +21,43 @@ void SystemRunning::begin() {
 
 // Top-level state handler for NORMAL operation
 void handleRunState(SystemController &sys, unsigned long now) {
-    // Lazily construct the domain services the first time we enter RUN.
+    // Initialize services once when first entering RUN
     static bool initialized = false;
-    static CoolingService    coolingService;
-    static PsuService        psuService;
-    static InputService      inputService;
-    static UiController      uiController;
 
     if (!initialized) {
-        coolingService.begin();
-        psuService.begin();
-        inputService.begin();
-        uiController.begin();
+        sys.cooling.begin();
+        sys.psu.begin();
+        sys.input.begin();
+        sys.ui.begin();
         ErrorLogger::instance().begin();
         initialized = true;
     }
 
     // Update input semantics (button + encoder)
-    inputService.update(now);
-    bool armed = inputService.isArmed();
+    sys.input.update(now);
+    bool armed = sys.input.isArmed();
 
     // Handle ON/OFF transitions for PSU control via PsuController
-    if (inputService.edgeArmedOn()) {
-        psuService.requestOn();
+    if (sys.input.edgeArmedOn()) {
+        sys.psu.requestOn();
     }
 
-    if (inputService.edgeArmedOff()) {
+    if (sys.input.edgeArmedOff()) {
         // Force UI setpoint toward 0 via InputService; the slewing logic
         // will then ramp applied current down at up to 100%/s.
-        inputService.forceKnobToZero();
-        psuService.requestOff();
+        sys.input.forceKnobToZero();
+        sys.psu.requestOff();
     }
 
     // 1. Pass the knob fraction from InputService to PsuController, then update
-    psuService.setUiSetpointFraction(inputService.getKnobFraction());
-    psuService.update(now);
+    sys.psu.setUiSetpointFraction(sys.input.getKnobFraction());
+    sys.psu.update(now);
 
     // 2. Update cooling policy (fans, pump, aux) based on temps + power
-    coolingService.update(now);
+    sys.cooling.update(now);
 
     // Copy cooling state to SystemController globals for UI/logging compatibility
-    const CoolingState& cs = coolingService.getState();
+    const CoolingState& cs = sys.cooling.getState();
     sys.globalLedTemp     = cs.ledTempC;
     sys.globalPumpTemp    = cs.waterTempC;
     sys.globalMainFansRPM = cs.mainFanRPM;
@@ -71,17 +67,17 @@ void handleRunState(SystemController &sys, unsigned long now) {
 
     // 3. Build SystemViewModel from services for UI/logging
     SystemViewModel vm;
-    vm.psuVoltage       = psuService.getVoltage();
-    vm.psuCurrent       = psuService.getCurrent();
-    vm.psuPower         = psuService.getPower();
+    vm.psuVoltage       = sys.psu.getVoltage();
+    vm.psuCurrent       = sys.psu.getCurrent();
+    vm.psuPower         = sys.psu.getPower();
     vm.ledTempC         = cs.ledTempC;
     vm.waterTempC       = cs.waterTempC;
     vm.mainFanRPM       = cs.mainFanRPM;
     vm.auxFanRPM        = cs.auxFanRPM;
     vm.psuFanRPM        = cs.psuFanRPM;
     vm.pumpRPM          = cs.pumpRPM;
-    vm.knobFraction     = inputService.getKnobFraction();
-    vm.appliedFraction  = psuService.getAppliedCurrentFraction();
+    vm.knobFraction     = sys.input.getKnobFraction();
+    vm.appliedFraction  = sys.psu.getAppliedCurrentFraction();
     vm.isArmed          = armed;
 
     // 4. Update fault model and log any new events
@@ -89,8 +85,8 @@ void handleRunState(SystemController &sys, unsigned long now) {
     ErrorLogger::instance().update(sys.currentState, vm, now);
 
     // 5. Update the power button LED to reflect armed/ON state
-    inputService.setButtonLed(armed);
+    sys.input.setButtonLed(armed);
 
     // 6. Finally, render the current UI frame
-    uiController.update(vm, now);
+    sys.ui.update(vm, now);
 }

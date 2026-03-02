@@ -1,4 +1,7 @@
 #include "logging/ErrorLogger.h"
+#include "core/Hardware.h"
+#include <Adafruit_SPIFlash.h>
+#include <SdFat.h>
 
 ErrorLogger &ErrorLogger::instance() {
     static ErrorLogger logger;
@@ -24,18 +27,63 @@ void ErrorLogger::begin() {
         _records[i] = {};
     }
 
-    _initialized = true;
+    // Initialize filesystem
+    // flash.begin() is already called in initHardware()
+    if (!fatfs.begin(&flash)) {
+        // Failed to mount filesystem. 
+        // We could try to format here:
+        // if (flash.eraseChip()) { fatfs.format(&flash); }
+        // But for safety, we'll just operate in RAM-only mode for now.
+    }
 
-    // TODO: Initialize the QSPI-backed LogStore abstraction here so that
-    // future fault events can be written to persistent storage.
+    _initialized = true;
 }
 
 void ErrorLogger::appendRecord(const LogRecord &record) {
+    // 1. Update in-memory ring buffer
     _records[_head] = record;
     _head = (_head + 1U) % MAX_RECORDS;
 
     if (_count < MAX_RECORDS) {
         ++_count;
+    }
+
+    // 2. Persist to QSPI Flash
+    File logFile = fatfs.open("error_log.csv", FILE_WRITE);
+    if (logFile) {
+        // If file is empty, write header
+        if (logFile.size() == 0) {
+            logFile.println("Time,Fault,State,LED_C,Water_C,MainRPM,AuxRPM,PsuRPM,PumpRPM,Volts,Amps,Watts");
+        }
+
+        logFile.print(record.timestampMs);
+        logFile.print(",");
+        logFile.print(static_cast<int>(record.fault));
+        logFile.print(",");
+        logFile.print(static_cast<int>(record.state));
+        logFile.print(",");
+        
+        logFile.print(record.ledTempC);
+        logFile.print(",");
+        logFile.print(record.pumpTempC);
+        logFile.print(",");
+        
+        logFile.print(record.mainFansRPM);
+        logFile.print(",");
+        logFile.print(record.auxFanRPM);
+        logFile.print(",");
+        logFile.print(record.psuFanRPM);
+        logFile.print(",");
+        logFile.print(record.pumpRPM);
+        logFile.print(",");
+
+        logFile.print(record.psuVoltage);
+        logFile.print(",");
+        logFile.print(record.psuCurrent);
+        logFile.print(",");
+        logFile.println(record.psuPower);
+
+        logFile.close();
     }
 }
 
@@ -73,8 +121,5 @@ void ErrorLogger::update(SystemState state, const SystemViewModel& vm, unsigned 
 
     appendRecord(rec);
     _lastLoggedFault = currentFault;
-
-    // TODO: When a concrete LogStore exists, enqueue this record for
-    // persistent write to QSPI here.
 }
 

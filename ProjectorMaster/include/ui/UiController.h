@@ -8,9 +8,11 @@
 // controller owns what is drawn on screen: PSU stats, circular LED power
 // gauge, virtual encoder position, and error banners/screens.
 
+class OledManager;
+
 class UiController {
 public:
-    UiController();
+    UiController(OledManager& oled);
 
     // Initialize fonts, layout state, and any cached references to the
     // underlying OledManager. Called once when entering RUN.
@@ -20,5 +22,8 @@ public:
     // screen and issuing drawing commands based on the current system
     // state (normal vs error) and telemetry.
     void update(const SystemViewModel& vm, unsigned long now);
+
+private:
+    OledManager& _oled;
 };
 

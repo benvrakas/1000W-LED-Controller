@@ -1,0 +1,36 @@
+#pragma once
+
+#include "drivers/Tachometers.h"
+#include "drivers/Thermistors.h"
+#include "drivers/CanBus.h"
+#include "drivers/Mcp2515CanBackend.h"
+#include "drivers/OLED.h"
+#include "drivers/PowerButton.h"
+#include "drivers/Encoder.h"
+#include <Wire.h>
+#include <Adafruit_SPIFlash.h>
+
+// Global Hardware Instances
+// (Extern declarations are also in their respective driver headers, 
+// but collected here for central access if needed)
+
+extern TwoWire oledWire;
+extern PowerButtonManager powerButton;
+extern TachometerManager pump;
+extern TachometerManager mainFan;
+extern TachometerManager psuFan;
+extern TachometerManager auxFan;
+extern ThermistorManager ledThermistor;
+extern ThermistorManager pumpThermistor;
+extern CanBusManager psu;
+extern Mcp2515CanBackend canBackend;
+extern OledManager oled;
+
+// QSPI Flash
+extern Adafruit_FlashTransport_QSPI flashTransport;
+extern Adafruit_SPIFlash flash;
+extern FatFileSystem fatfs;
+
+// Hardware Initialization
+// Called from setup() to initialize buses and pins that require runtime context
+void initHardware();

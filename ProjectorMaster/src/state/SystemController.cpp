@@ -1,13 +1,15 @@
 #include "state/SystemController.h"
 #include <Arduino.h>
-#include "drivers/CanBus.h"
-
-// Global PSU CAN manager instance from main.cpp
-extern CanBusManager psu;
 
 // SystemController Class Construction
-SystemController::SystemController()
-    : currentState(SystemState::INIT), globalLedTemp(0.0f), globalPumpTemp(0.0f),
+SystemController::SystemController(AppContext& ctx)
+    : context(ctx),
+      cooling(ctx.mainFan, ctx.psuFan, ctx.pump, ctx.auxFan, ctx.ledThermistor, ctx.pumpThermistor),
+      psu(ctx.psu),
+      input(ctx.encoder, ctx.powerButton),
+      ui(ctx.oled),
+      currentState(SystemState::INIT), 
+      globalLedTemp(0.0f), globalPumpTemp(0.0f),
       globalMainFansRPM(0), globalAuxFanRPM(0), globalPSUFanRPM(0), globalPumpRPM(0)
 {}
 
@@ -15,7 +17,6 @@ SystemController::SystemController()
 void SystemController::begin() {
     // Clear the union memory to start clean
     memset(&stateData, 0, sizeof(stateData));
-
 }
 
 // 2. The Main State Machine Loop
@@ -43,7 +44,8 @@ void SystemController::transitionTo(SystemState newState) {
     // Perform any "Cleanup" before switching
     // If leaving RUN, ensure the PSU is told to stop output
     if (currentState == SystemState::RUN && newState == SystemState::ERROR_KILL) {
-        psu.setOperation(false);  // Disable PSU output over CAN
+        // Hard disable via driver for safety
+        context.psu.setOperation(false);
     }
 
     // Update the state

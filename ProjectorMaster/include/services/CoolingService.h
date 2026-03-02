@@ -17,6 +17,8 @@ struct CoolingState {
 };
 
 // Forward declaration
+class TachometerManager;
+class ThermistorManager;
 struct SystemController;
 
 // CoolingService
@@ -29,7 +31,9 @@ struct SystemController;
 
 class CoolingService {
 public:
-    CoolingService();
+    CoolingService(TachometerManager& mainFan, TachometerManager& psuFan,
+                   TachometerManager& pump, TachometerManager& auxFan,
+                   ThermistorManager& ledThermistor, ThermistorManager& pumpThermistor);
 
     // Initialize any internal state. Called once when entering RUN.
     void begin();
@@ -42,6 +46,13 @@ public:
     const CoolingState& getState() const { return _state; }
 
 private:
+    TachometerManager& _mainFan;
+    TachometerManager& _psuFan;
+    TachometerManager& _pump;
+    TachometerManager& _auxFan;
+    ThermistorManager& _ledThermistor;
+    ThermistorManager& _pumpThermistor;
+
     CoolingState _state;
 };
 

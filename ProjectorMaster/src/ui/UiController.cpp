@@ -2,13 +2,10 @@
 
 #include "drivers/OLED.h"
 
-// Global OLED instance from main.cpp (low-level render target)
-extern OledManager oled;
-
-UiController::UiController() = default;
+UiController::UiController(OledManager& oled) : _oled(oled) {}
 
 void UiController::begin() {
-    // For now, boot screen handling remains in main or can be added here.
+    // Boot screen is handled by StateInit during system startup sequence.
 }
 
 // Simple helper to draw a circular gauge (arc) representing a 0..1 value.
@@ -37,7 +34,7 @@ static void drawGauge(Adafruit_SSD1306* d,
 void UiController::update(const SystemViewModel& vm, unsigned long now) {
     (void)now;
 
-    Adafruit_SSD1306* d = oled.getDisplay();
+    Adafruit_SSD1306* d = _oled.getDisplay();
     if (!d) return;
 
     // Clear screen

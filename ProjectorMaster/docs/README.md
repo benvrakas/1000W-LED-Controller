@@ -25,6 +25,7 @@ Main Logic Structure:
             75c for LED - Millis(20)
         OLED updates
         Fan Curves - Temperature-to-duty mapping via CoolingService
+            Configuration defined in include/config/FanCurves.h
             Read thermistor temperatures
             Map temperature to PWM duty cycle
             Apply duty via TachometerManager.setDuty()

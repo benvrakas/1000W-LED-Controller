@@ -1,26 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-
-namespace TachometerConfig {
-    // Deadstart Duty Cycles (minimum PWM to start spinning)
-    static constexpr uint8_t  MAIN_PSU_DEADSTART_DUTY = 77;
-    static constexpr uint8_t  AUX_DEADSTART_DUTY = 26;
-    static constexpr uint8_t  PUMP_DEADSTART_DUTY = 127;
-
-    // RPM Computation Intervals (milliseconds)
-    static constexpr unsigned long RPM_COMPUTE_INTERVAL = 200;
-
-    // RPM Limits (for scaling/clamping)
-    static constexpr uint16_t MAX_MAIN_PSU_RPM = 3000;
-    static constexpr uint16_t MAX_AUX_RPM = 6000;
-    static constexpr uint16_t MAX_PUMP_RPM = 4800;
-
-    // Stall Detection Thresholds (RPM below this with duty > 0 = stall)
-    static constexpr uint16_t MAIN_PSU_STALL_RPM = 300;
-    static constexpr uint16_t AUX_STALL_RPM = 300;
-    static constexpr uint16_t PUMP_STALL_RPM = 150;
-}
+#include "config/FanCurves.h"
 
 // ---------------------------------------------------------------------------
 // TachometerManager - PWM output + tachometer RPM feedback (no PID)

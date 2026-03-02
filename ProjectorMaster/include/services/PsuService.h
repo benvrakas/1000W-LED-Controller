@@ -1,6 +1,6 @@
 #pragma once
 
-#include "state/SystemController.h"
+#include <Arduino.h>
 
 // PsuService
 // ----------
@@ -8,9 +8,11 @@
 // notion of LED power setpoint, PSU operating mode, and interpreted PSU
 // telemetry that other subsystems (cooling, UI, logging) can consume.
 
+class CanBusManager;
+
 class PsuService {
 public:
-    PsuService();
+    PsuService(CanBusManager& psu);
 
     // Bring the PSU control layer online. Intended to be called once from
     // the RUN state when the system first transitions from INIT.
@@ -53,6 +55,8 @@ public:
     void setSlewRatePercentPerSec(float rate) { _slewRatePctPerSec = rate; }
 
 private:
+    CanBusManager& _psu;
+
     // Slew-limited LED current control
     float    _uiSetpointFrac;      // 0..1 from encoder/UI
     float    _appliedCurrentFrac;  // 0..1 actually commanded to PSU

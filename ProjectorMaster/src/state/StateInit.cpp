@@ -1,9 +1,12 @@
 #include "state/SystemController.h"
 #include "state/StateInit.h"
 #include "util/BoardPins.h"
-#include "drivers/Tachometers.h"
+#include "config/FanCurves.h"
+
+// Note: ISR functions are declared in their respective driver headers or HardwareBridges
+// We need them for attachInterrupt
+#include "drivers/Tachometers.h" 
 #include "drivers/PowerButton.h"
-#include "drivers/OLED.h"
 #include "drivers/Encoder.h"
 
 //Handler Function Implementation
@@ -17,7 +20,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
     //Switch statement where we go through all init steps and verify they are safe
     switch (data.bootStep) {
         case 1: //Board pins init
-            startup.boardPinsInit();
+            startup.boardPinsInit(sys);
             startup.boardPinsVerify(data.bootStep);
 
             //Check that our hardware system is ready, if so move to next case
@@ -28,7 +31,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
         
         case 2: //Pump init
-            startup.pumpInit();
+            startup.pumpInit(sys);
 
             if(startup.getStepStatus(data.bootStep)) {
                 data.lastStepTime = currentMillis;
@@ -37,7 +40,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
 
         case 3: //Fans init
-            startup.fansInit();
+            startup.fansInit(sys);
 
             if(startup.getStepStatus(data.bootStep)) {
                 data.lastStepTime = currentMillis;
@@ -46,7 +49,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
 
         case 4: //PSU init
-            startup.psuInit();
+            startup.psuInit(sys);
 
             if(startup.getStepStatus(data.bootStep)) {
                 data.lastStepTime = currentMillis;
@@ -55,7 +58,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
 
         case 5: //Display init
-            startup.displayInit();
+            startup.displayInit(sys);
 
             if(startup.getStepStatus(data.bootStep)) {
                 data.lastStepTime = currentMillis;
@@ -115,13 +118,13 @@ void SystemStartup::setStepStatus(uint8_t bootStep, bool status) {
 
 //Initialization Functions
 //Board pins
-void SystemStartup::boardPinsInit() {
+void SystemStartup::boardPinsInit(SystemController& sys) {
     // Encoder Sensor Setup
     pinMode(BoardPins::PIN_ENCODER_A, INPUT_PULLUP);
     pinMode(BoardPins::PIN_ENCODER_B, INPUT_PULLUP);
 
     // Initialize encoder state once pins are configured
-    encoder.begin();
+    sys.context.encoder.begin();
 
     // Power Button Setup
     pinMode(BoardPins::PIN_SW_BTN, INPUT_PULLUP);
@@ -158,8 +161,8 @@ void SystemStartup::boardPinsInit() {
     pinMode(BoardPins::PIN_PSU_FAN_TACH, INPUT);
     pinMode(BoardPins::PIN_AUX_FAN_TACH, INPUT);
 
-    // NOTE: The PSU now uses CANBus. The OLED resides on a dedicated I2C bus
-    // (SERCOM5 on A4/A5) that is initialized separately in the display init path.
+    // Initialise ISRs
+    isrInit();
 }
 
 // Verify the safe connection settings
@@ -182,8 +185,8 @@ void SystemStartup::boardPinsVerify(uint8_t bootStep) {
         (isPinSetAsOutput(BoardPins::PIN_AUX_FAN_PWM) && digitalRead(BoardPins::PIN_AUX_FAN_PWM) == LOW) &&
         
         // Thermistor Sane Range Check
-        (analogRead(BoardPins::PIN_THERM_WATER) > 10 && analogRead(BoardPins::PIN_THERM_WATER) < 1010) &&
-        (analogRead(BoardPins::PIN_THERM_LED) > 10 && analogRead(BoardPins::PIN_THERM_LED) < 1010) &&
+        (analogRead(BoardPins::PIN_THERM_WATER) > 10 && analogRead(BoardPins::PIN_THERM_WATER) < 4090) &&
+        (analogRead(BoardPins::PIN_THERM_LED) > 10 && analogRead(BoardPins::PIN_THERM_LED) < 4090) &&
 
         // Check Encoder current readouts
         (digitalRead(BoardPins::PIN_ENCODER_A) == HIGH || digitalRead(BoardPins::PIN_ENCODER_B) == HIGH)
@@ -239,8 +242,8 @@ void SystemStartup::isrInit() {
 }
 
 //Pump
-    void SystemStartup::pumpInit() {
-        pump.begin();
+    void SystemStartup::pumpInit(SystemController& sys) {
+        sys.context.pump.begin();
         // Start pump at minimum duty to prime the loop
         analogWrite(BoardPins::PIN_PUMP_PWM, TachometerConfig::PUMP_DEADSTART_DUTY);
         setStepStatus(2, true);  // Mark pump init complete
@@ -253,10 +256,10 @@ void SystemStartup::isrInit() {
     }
 
 //Fans
-    void SystemStartup::fansInit() {
-        mainFan.begin();
-        psuFan.begin();
-        auxFan.begin();
+    void SystemStartup::fansInit(SystemController& sys) {
+        sys.context.mainFan.begin();
+        sys.context.psuFan.begin();
+        sys.context.auxFan.begin();
         // Start fans at minimum duty for initial cooling
         analogWrite(BoardPins::PIN_RAD_FANS_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
         analogWrite(BoardPins::PIN_PSU_FAN_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
@@ -270,8 +273,8 @@ void SystemStartup::isrInit() {
     }
 
 //PSU
-    void SystemStartup::psuInit() {
-        // PSU CAN initialization happens in main.cpp via psu.begin()
+    void SystemStartup::psuInit(SystemController& sys) {
+        // PSU CAN initialization happens in main.cpp via initHardware() -> psu.begin()
         // Ensure PSU is disabled at startup
         pinMode(BoardPins::PIN_PSU_ENABLE, OUTPUT);
         digitalWrite(BoardPins::PIN_PSU_ENABLE, LOW);
@@ -287,9 +290,10 @@ void SystemStartup::isrInit() {
     }
 
 //Display
-    void SystemStartup::displayInit() {
-        // OLED initialization happens in main.cpp via oled.begin()
-        // Display is ready to use
+    void SystemStartup::displayInit(SystemController& sys) {
+        // OLED initialization happens in main.cpp via initHardware() -> oled.begin()
+        // Show boot screen
+        sys.context.oled.showBootScreen("2.0");
         setStepStatus(5, true);  // Mark display init complete
     }
 

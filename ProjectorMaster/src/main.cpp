@@ -1,77 +1,33 @@
 #include <Adafruit_SleepyDog.h>
 #include "state/SystemController.h"
-#include "state/StateInit.h"
-#include "state/StateRun.h"
-#include "state/StateErrorKill.h"
-#include "drivers/OLED.h"
-#include "drivers/CanBus.h"
-#include "drivers/Mcp2515CanBackend.h"
-#include "drivers/Tachometers.h"
-#include "drivers/Thermistors.h"
-#include "drivers/Encoder.h"
-#include "drivers/PowerButton.h"
-#include <Wire.h>
-#include <SPI.h>
+#include "core/Hardware.h"
 
-// Secondary I2C bus for the OLED on SERCOM5 (A4/A5, PIO_SERCOM_ALT)
-TwoWire oledWire(&sercom5, BoardPins::PIN_OLED_SDA, BoardPins::PIN_OLED_SCL);
+// Construct AppContext with references to global hardware instances
+// Order must match AppContext struct definition in include/core/AppContext.h
+AppContext context = {
+    pump,           // TachometerManager& pump
+    mainFan,        // TachometerManager& mainFan
+    psuFan,         // TachometerManager& psuFan
+    auxFan,         // TachometerManager& auxFan
+    ledThermistor,  // ThermistorManager& ledThermistor
+    pumpThermistor, // ThermistorManager& pumpThermistor
+    encoder,        // EncoderManager& encoder
+    powerButton,    // PowerButtonManager& powerButton
+    psu,            // CanBusManager& psu
+    oled            // OledManager& oled
+};
 
-void SERCOM5_Handler() {
-    oledWire.onService();
-}
-
-//Initialize System Controller
-SystemController sys;
-
-//Initialize Power Button Manager
-PowerButtonManager powerButton(BoardPins::PIN_SW_BTN, BoardPins::PIN_SW_LED);
-
-// Initialize Tachometer Managers (PWM + RPM feedback, driven by fan curves)
-TachometerManager pump(BoardPins::PIN_PUMP_PWM, BoardPins::PIN_PUMP_TACH,
-    TachometerConfig::PUMP_DEADSTART_DUTY, TachometerConfig::MAX_PUMP_RPM,
-    TachometerConfig::PUMP_STALL_RPM);
-
-TachometerManager mainFan(BoardPins::PIN_RAD_FANS_PWM, BoardPins::PIN_RAD_FAN_TACH,
-    TachometerConfig::MAIN_PSU_DEADSTART_DUTY, TachometerConfig::MAX_MAIN_PSU_RPM,
-    TachometerConfig::MAIN_PSU_STALL_RPM);
-
-TachometerManager psuFan(BoardPins::PIN_PSU_FAN_PWM, BoardPins::PIN_PSU_FAN_TACH,
-    TachometerConfig::MAIN_PSU_DEADSTART_DUTY, TachometerConfig::MAX_MAIN_PSU_RPM,
-    TachometerConfig::MAIN_PSU_STALL_RPM);
-
-TachometerManager auxFan(BoardPins::PIN_AUX_FAN_PWM, BoardPins::PIN_AUX_FAN_TACH,
-    TachometerConfig::AUX_DEADSTART_DUTY, TachometerConfig::MAX_AUX_RPM,
-    TachometerConfig::AUX_STALL_RPM);
-
-//Initialize Thermistor Managers
-ThermistorManager ledThermistor(BoardPins::PIN_THERM_LED, ThermistorConfig::BETA_VALUE_LED, 
-    ThermistorConfig::SERIES_RESISTOR_LED);
-ThermistorManager pumpThermistor(BoardPins::PIN_THERM_WATER, ThermistorConfig::BETA_VALUE_PUMP, 
-    ThermistorConfig::SERIES_RESISTOR_PUMP);
-
-//Initialize CANBus PSU Manager (Mean Well UHP-1500-48)
-CanBusManager psu(BoardPins::PIN_CAN_TX, BoardPins::PIN_CAN_RX);
-
-//Initialize MCP2515 CAN backend (16MHz crystal typical for MCP2515 modules)
-Mcp2515CanBackend canBackend(BoardPins::PIN_CAN_CS, 16);
-
-//Initialize OLED Display on secondary I2C bus (A4/A5 via SERCOM5)
-OledManager oled(BoardPins::PIN_OLED_SDA, BoardPins::PIN_OLED_SCL, OLEDScreenConfig::DEFAULT_ADDRESS,
-    OLEDScreenConfig::SCREEN_WIDTH, OLEDScreenConfig::SCREEN_HEIGHT);
+// Initialize System Controller with dependency injection
+SystemController sys(context);
 
 void setup() {
-    Watchdog.enable(1000); //How long??? Probably longer than our Logic Watchdogs
+    Watchdog.enable(1000); // 1s watchdog
     Serial.begin(115200);
 
-    // Bring up the dedicated OLED I2C bus
-    oledWire.begin();
-    oledWire.setClock(OLEDScreenConfig::BUS_SPEED);
-    oled.begin(&oledWire);
+    // Initialize bus-level hardware (I2C, SPI, CAN backend)
+    initHardware();
 
-    // Initialize SPI and CAN backend for PSU communication
-    SPI.begin();
-    psu.begin(&canBackend);
-
+    // Begin system state machine
     sys.begin();
 }
 

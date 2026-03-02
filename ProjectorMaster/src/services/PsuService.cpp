@@ -4,11 +4,9 @@
 #include "drivers/CanBus.h"
 #include "util/BoardPins.h"
 
-// Global PSU CAN manager instance from main.cpp
-extern CanBusManager psu;
-
-PsuService::PsuService()
-    : _uiSetpointFrac(0.0f),
+PsuService::PsuService(CanBusManager& psu)
+    : _psu(psu),
+      _uiSetpointFrac(0.0f),
       _appliedCurrentFrac(0.0f),
       _lastUpdateMs(0),
       _slewRatePctPerSec(SLEW_RATE_NORMAL_PCT_PER_SEC),
@@ -36,7 +34,7 @@ void PsuService::requestOn() {
     _slewRatePctPerSec = SLEW_RATE_NORMAL_PCT_PER_SEC;
     
     // Enable CAN operation and remote gate
-    psu.setOperation(true);
+    _psu.setOperation(true);
     pinMode(BoardPins::PIN_PSU_REMOTE, OUTPUT);
     digitalWrite(BoardPins::PIN_PSU_REMOTE, HIGH);
 }
@@ -88,37 +86,37 @@ void PsuService::update(unsigned long now) {
     // 2) Convert to current and issue CAN command
     float targetCurrentA = _appliedCurrentFrac * MAX_LED_CURRENT_A;
 
-    // For now, approximate: map current fraction directly to a 0–100% level
-    // and use CanBusManager's requestPowerPercent API as the "current" set.
-    float levelPercent = _appliedCurrentFrac * 100.0f;
+    // Convert target Amps to percentage of PSU maximum capacity
+    // PSU Max = 31.3A, LED Max = 22.0A.
+    // We must scale the request so 100% LED power = ~70% PSU power.
+    float levelPercent = (targetCurrentA / CanBusConfig::MAX_CURRENT_A) * 100.0f;
+    
     if (levelPercent < 0.0f) levelPercent = 0.0f;
     if (levelPercent > 100.0f) levelPercent = 100.0f;
 
-    (void)targetCurrentA; // Reserved for future use when encoding actual amps
-
-    psu.requestPowerPercent(levelPercent);
+    _psu.requestPowerPercent(levelPercent);
 
     // 3) Allow CAN manager to process telemetry and watchdog
-    psu.update(now);
+    _psu.update(now);
 
     // 4) If we're in shutdown mode and current has ramped down, disable PSU
     if (!_isOn && _appliedCurrentFrac <= 0.01f) {
-        psu.setOperation(false);
+        _psu.setOperation(false);
         digitalWrite(BoardPins::PIN_PSU_REMOTE, LOW);
     }
 }
 
 // Telemetry getters - delegate to CAN manager
 float PsuService::getVoltage() const {
-    return psu.getTelemetry().voltage;
+    return _psu.getTelemetry().voltage;
 }
 
 float PsuService::getCurrent() const {
-    return psu.getTelemetry().current;
+    return _psu.getTelemetry().current;
 }
 
 float PsuService::getPower() const {
-    CanTelemetry t = psu.getTelemetry();
+    CanTelemetry t = _psu.getTelemetry();
     return t.voltage * t.current;
 }
 

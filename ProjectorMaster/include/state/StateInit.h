@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 
+class SystemController; // Forward declaration
+
 class SystemStartup {
 public:
     //Class Construction
@@ -14,16 +16,16 @@ public:
     void setStepStatus(uint8_t bootStep, bool status);
 
     //Initialization and verification functions
-    void boardPinsInit();
+    void boardPinsInit(SystemController& sys);
     void boardPinsVerify(uint8_t bootStep);
     void isrInit();
-    void pumpInit();
+    void pumpInit(SystemController& sys);
     void pumpVerify(uint8_t bootStep);
-    void fansInit();
+    void fansInit(SystemController& sys);
     void fansVerify(uint8_t bootStep);
-    void psuInit();
+    void psuInit(SystemController& sys);
     void psuVerify(uint8_t bootStep);
-    void displayInit();
+    void displayInit(SystemController& sys);
     void displayVerify(uint8_t bootStep);
 
 private:

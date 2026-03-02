@@ -2,14 +2,9 @@
 #include "util/BoardPins.h"
 #include <Arduino.h>
 
-// Use existing global driver instances for now; these can be
-// migrated into an AppContext later without changing this service's
-// public API.
-extern EncoderManager     encoder;
-extern PowerButtonManager powerButton;
-
-InputService::InputService()
-    : _armed(false),
+InputService::InputService(EncoderManager& encoder, PowerButtonManager& powerButton)
+    : _encoder(encoder), _powerButton(powerButton),
+      _armed(false),
       _prevArmed(false),
       _edgeArmedOn(false),
       _edgeArmedOff(false),
@@ -17,10 +12,10 @@ InputService::InputService()
 
 void InputService::begin() {
     // Seed state from current button status and encoder position.
-    _armed     = powerButton.isArmed();
+    _armed     = _powerButton.isArmed();
     _prevArmed = _armed;
 
-    int16_t counts = encoder.getCounts();
+    int16_t counts = _encoder.getCounts();
     if (counts < 0) counts = 0;
     if (counts > EncoderManager::MAX_COUNTS_RANGE) {
         counts = EncoderManager::MAX_COUNTS_RANGE;
@@ -37,9 +32,9 @@ void InputService::update(unsigned long now) {
     (void)now;
 
     // Update button semantics first
-    powerButton.update(now);
+    _powerButton.update(now);
 
-    bool currentArmed = powerButton.isArmed();
+    bool currentArmed = _powerButton.isArmed();
 
     _edgeArmedOn  = (! _prevArmed) && currentArmed;
     _edgeArmedOff = _prevArmed && (! currentArmed);
@@ -48,7 +43,7 @@ void InputService::update(unsigned long now) {
     _armed     = currentArmed;
 
     // Update encoder-derived knob fraction
-    int16_t counts = encoder.getCounts();
+    int16_t counts = _encoder.getCounts();
     if (counts < 0) counts = 0;
     if (counts > EncoderManager::MAX_COUNTS_RANGE) {
         counts = EncoderManager::MAX_COUNTS_RANGE;
@@ -59,7 +54,7 @@ void InputService::update(unsigned long now) {
 }
 
 void InputService::forceKnobToZero() {
-    encoder.setCounts(0);
+    _encoder.setCounts(0);
     _knobFraction = 0.0f;
 }
 

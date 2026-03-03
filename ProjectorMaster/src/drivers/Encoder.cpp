@@ -7,8 +7,8 @@ EncoderManager::EncoderManager()
 
 void EncoderManager::begin() {
     // Read initial state of the encoder pins
-    bool a = (digitalRead(BoardPins::PIN_ENCODER_A) != 0);
-    bool b = (digitalRead(BoardPins::PIN_ENCODER_B) != 0);
+    bool a = (digitalRead(PinMap::PIN_ENCODER_A) != 0);
+    bool b = (digitalRead(PinMap::PIN_ENCODER_B) != 0);
     _lastState = static_cast<uint8_t>((static_cast<uint8_t>(a) << 1) |
                                       static_cast<uint8_t>(b));
 }
@@ -54,14 +54,14 @@ void EncoderManager::updateFromPins(bool a, bool b) {
 }
 
 void EncoderManager::handleInterruptA() {
-    bool a = (digitalRead(BoardPins::PIN_ENCODER_A) != 0);
-    bool b = (digitalRead(BoardPins::PIN_ENCODER_B) != 0);
+    bool a = (digitalRead(PinMap::PIN_ENCODER_A) != 0);
+    bool b = (digitalRead(PinMap::PIN_ENCODER_B) != 0);
     updateFromPins(a, b);
 }
 
 void EncoderManager::handleInterruptB() {
-    bool a = (digitalRead(BoardPins::PIN_ENCODER_A) != 0);
-    bool b = (digitalRead(BoardPins::PIN_ENCODER_B) != 0);
+    bool a = (digitalRead(PinMap::PIN_ENCODER_A) != 0);
+    bool b = (digitalRead(PinMap::PIN_ENCODER_B) != 0);
     updateFromPins(a, b);
 }
 

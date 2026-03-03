@@ -59,8 +59,8 @@ void CanBusManager::begin(ICanBackend* backend) {
     _backend = backend;
 
     // Ensure PSU enable is defined and starts in a safe (off) state
-    pinMode(BoardPins::PIN_PSU_ENABLE, OUTPUT);
-    digitalWrite(BoardPins::PIN_PSU_ENABLE, LOW);
+    pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
+    digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
 
     if (_backend) {
         _backend->begin(CanBusConfig::BITRATE);
@@ -104,7 +104,7 @@ void CanBusManager::setOperation(bool enable) {
 
     // Hardware kill line should never be high when we command off
     if (!enable) {
-        digitalWrite(BoardPins::PIN_PSU_ENABLE, LOW);
+        digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
     }
 }
 
@@ -158,7 +158,7 @@ void CanBusManager::handleWatchdog(uint32_t nowMs) {
     uint32_t elapsed = nowMs - _telemetry.lastUpdateMs;
     if (elapsed > CanBusConfig::TELEMETRY_TIMEOUT_MS) {
         // Telemetry timeout: drop hardware enable and latch a fault
-        digitalWrite(BoardPins::PIN_PSU_ENABLE, LOW);
+        digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
         _fault = true;
     }
 }

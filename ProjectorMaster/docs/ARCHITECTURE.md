@@ -1,128 +1,49 @@
-# 1000W LED Controller - System Architecture
+# ProjectorMaster Architecture v2.0
 
-## Overview
+## 1. System Overview
+Firmware for a high-power (1000W) LED projector controller based on the **Adafruit Feather M4 Express (SAMD51)**. It manages a **Mean Well UHP-1500-48** power supply via CAN Bus, controls active liquid cooling, and provides a user interface via OLED and Rotary Encoder.
 
-This firmware controls a high-power (1000W) LED projector using a SAMD51-based Adafruit Feather M4. The architecture follows a layered design with clear separation of concerns.
+## 2. Core Architectural Pattern
+The system follows a **Dependency Injection (DI)** pattern to decouple logic from hardware.
 
-## Layer Diagram
+### 2.1 Hardware Layer (`src/core/Hardware.cpp`)
+*   **Role:** The "Composition Root". Instantiates all physical drivers (Tachometers, CAN backend, OLED, Thermistors) and pin configurations.
+*   **Key Components:**
+    *   `NativeCanBackend`: Adapts the SAMD51 hardware CAN controller to the `ICanBackend` interface.
+    *   `TachometerManager`: Handles PWM output and tachometer pulse counting.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         main.cpp                                │
-│              (Driver instantiation, setup/loop)                 │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    State Machine Layer                          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
-│  │  StateInit   │  │   StateRun   │  │   StateErrorKill     │  │
-│  └──────────────┘  └──────────────┘  └──────────────────────┘  │
-│                    SystemController                             │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐
-│  InputService   │  │  PsuController  │  │CoolingController│
-│  (encoder,btn)  │  │   (CAN, gate)   │  │ (fans, pump)    │
-└─────────────────┘  └─────────────────┘  └─────────────────┘
-          │                   │                   │
-          ▼                   ▼                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                       Driver Layer                              │
-│  EncoderManager │ PowerButtonManager │ CanBusManager │ etc.    │
-│  ThermistorManager │ TachometerManager │ OledManager            │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      Hardware (GPIO, CAN, I2C)                  │
-│              Mean Well UHP-1500-48 PSU │ OLED │ Sensors         │
-└─────────────────────────────────────────────────────────────────┘
-```
+### 2.2 AppContext (`include/core/AppContext.h`)
+*   **Role:** The "Toolbelt". A struct containing references to all hardware instances.
+*   **Purpose:** Passed to the `SystemController` and Services, allowing them to access hardware without relying on global variables.
 
-## Key Abstractions
+### 2.3 System Controller (`src/state/SystemController.cpp`)
+*   **Role:** The "Brain". Manages the high-level Finite State Machine (FSM) and owns the domain services.
+*   **States:**
+    1.  **INIT**: Validates sensors, spins up pumps/fans, and checks for hardware faults before enabling high power.
+    2.  **RUN**: The main control loop. Updates services, inputs, and UI.
+    3.  **ERROR_KILL**: A latched safety state entered upon critical faults (Over-temp, CAN timeout). Disables PSU immediately.
 
-### SystemViewModel (`include/core/SystemViewModel.h`)
-Read-only snapshot of all system telemetry, built by `StateRun` from service outputs. Passed to:
-- `UiController` for display rendering
-- `ErrorLogger` for fault record snapshots
+## 3. Domain Services
+Logic is divided into isolated services, injected with their specific dependencies.
 
-This ensures UI and logging have no direct driver dependencies.
+| Service | Responsibility | Dependencies |
+| :--- | :--- | :--- |
+| **`PsuService`** | Manages LED current setpoint, slew limiting, and PSU enable/disable logic. | `CanBusManager` |
+| **`CoolingService`** | Reads temperatures and sets fan/pump speeds based on configured curves. | `TachometerManager`, `ThermistorManager` |
+| **`InputService`** | Processes encoder rotation and power button (arm/disarm) logic. | `EncoderManager`, `PowerButtonManager` |
+| **`UiController`** | Renders the system state to the OLED display (Telemetry, Gauges, Errors). | `OledManager` |
 
-### Services
+## 4. Configuration
+All system tuning parameters are centralized in `include/config/`:
 
-| Service | Location | Responsibility |
-|---------|----------|----------------|
-| `InputService` | `include/services/InputService.h` | Encapsulates encoder + power button. Exposes `isArmed()`, `getKnobFraction()`, edge events |
-| `PsuService` | `include/services/PsuService.h` | Controls Mean Well PSU via CAN + remote gate pin. Slew-limited current ramping |
-| `CoolingService` | `include/services/CoolingService.h` | Owns thermistors + tachometers. Returns `CoolingState` with temps and RPMs |
+*   **`PinMap.h`**: Hardware pin definitions (Native CAN on SDA/SCL, etc.).
+*   **`ThermalConfig.h`**: Thermistor beta values, Fan/Pump RPM limits, and **Fan Curves** (Temperature -> PWM mapping).
+*   **`PowerConfig.h`**: PSU voltage/current limits, CAN bus bitrate, and Slew rates.
 
-### Drivers
+## 5. Safety & Logging
+*   **FaultManager**: Monitors telemetry against limits (e.g., LED Temp > 75°C) and triggers state transitions.
+*   **ErrorLogger**: Persists fault events to the onboard QSPI Flash (`error_log.csv`) using a FAT filesystem, ensuring crash data is saved even on power loss. The logger captures the exact **Boot Step** if a failure occurs during initialization.
 
-| Driver | Location | Hardware |
-|--------|----------|----------|
-| `EncoderManager` | `include/drivers/Encoder.h` | 600 PPR rotary encoder for power setpoint |
-| `PowerButtonManager` | `include/drivers/PowerButton.h` | Illuminated latching button (3s hold on, tap off) |
-| `CanBusManager` | `include/drivers/CanBus.h` | CAN 2.0B interface to Mean Well PSU |
-| `TachometerManager` | `include/drivers/Tachometers.h` | PWM + tach for fans/pump (fan curve driven) |
-| `ThermistorManager` | `include/drivers/Thermistors.h` | NTC thermistors (LED junction, water loop) |
-| `OledManager` | `include/drivers/OLED.h` | 128x32 SSD1306 OLED display |
-
-### State Machine
-
-| State | Handler | Description |
-|-------|---------|-------------|
-| `INIT` | `StateInit.cpp` | Hardware bring-up, cooling deadstart, CAN init |
-| `RUN` | `StateRun.cpp` | Normal operation with services |
-| `ERROR_KILL` | `StateErrorKill.cpp` | Safe shutdown on fault |
-
-## Data Flow
-
-```
-User Input (encoder/button)
-         │
-         ▼
-    InputService ──► PsuController.setUiSetpointFraction()
-         │                    │
-         │                    ▼
-         │           Slew-limited CAN commands to PSU
-         │
-         ├──► CoolingController.update() ──► Fan/pump PWM
-         │
-         ▼
-    StateRun builds SystemViewModel
-         │
-         ├──► UiController.update(vm) ──► OLED display
-         │
-         └──► ErrorLogger.update(state, vm) ──► Fault records
-```
-
-## Fault System
-
-- `FaultCode` enum in `include/logging/FaultManager.h`
-- `FaultManager::raiseFault()` / `clearFault()` API
-- `ErrorLogger` captures `SystemViewModel` snapshot on fault change
-
-## Directory Structure
-
-```
-include/
-├── core/           # Core types (SystemViewModel)
-├── services/       # Domain services (InputService, PsuService, CoolingService)
-├── drivers/        # Hardware abstractions
-├── logging/        # FaultManager, ErrorLogger
-├── util/           # BoardPins, HardwareBridges
-├── state/    # State machine (INIT, RUN, ERROR_KILL)
-└── ui/             # UiController
-
-src/                # Implementation files (mirrors include/)
-```
-
-## Build
-
-```bash
-pio run          # Build
-pio run -t upload # Flash to Feather M4
-```
+## 6. Protocols
+*   **CAN Bus**: Uses 29-bit Extended IDs.
+    *   **Current Control**: Uses PMBus Linear11 encoding. 100% LED Power (22A) is scaled relative to the PSU Max (31.3A) to ensure correct current command.

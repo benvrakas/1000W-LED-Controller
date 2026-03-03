@@ -1,6 +1,6 @@
 #include "core/Hardware.h"
-#include "util/BoardPins.h"
-#include "config/FanCurves.h"
+#include "config/PinMap.h"
+#include "config/ThermalConfig.h"
 #include <SPI.h>
 
 // ---------------------------------------------------------------------------

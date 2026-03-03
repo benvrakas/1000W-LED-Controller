@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "config/FanCurves.h"
+#include "config/ThermalConfig.h"
 
 // ---------------------------------------------------------------------------
 // TachometerManager - PWM output + tachometer RPM feedback (no PID)

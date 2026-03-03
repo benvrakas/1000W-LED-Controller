@@ -1,5 +1,5 @@
 #include "services/InputService.h"
-#include "util/BoardPins.h"
+#include "config/PinMap.h"
 #include <Arduino.h>
 
 InputService::InputService(EncoderManager& encoder, PowerButtonManager& powerButton)

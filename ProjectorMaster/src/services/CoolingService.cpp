@@ -2,10 +2,10 @@
 
 #include <Arduino.h>
 
-#include "util/BoardPins.h"
+#include "config/PinMap.h"
 #include "drivers/Thermistors.h"
 #include "drivers/Tachometers.h"
-#include "config/FanCurves.h"
+#include "config/ThermalConfig.h"
 
 // Helper: map a temperature into an 8-bit duty cycle with clamping.
 static uint8_t mapTempToDuty(float tempC,

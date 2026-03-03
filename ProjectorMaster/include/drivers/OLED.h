@@ -2,7 +2,7 @@
 
 #include <Adafruit_SSD1306.h>
 #include <Wire.h>
-#include "util/BoardPins.h"
+#include "config/PinMap.h"
 
 //Configure OLED Display
 namespace OLEDScreenConfig {

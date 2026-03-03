@@ -1,7 +1,7 @@
 #include "state/SystemController.h"
 #include "state/StateInit.h"
-#include "util/BoardPins.h"
-#include "config/FanCurves.h"
+#include "config/PinMap.h"
+#include "config/ThermalConfig.h"
 
 // Note: ISR functions are declared in their respective driver headers or HardwareBridges
 // We need them for attachInterrupt

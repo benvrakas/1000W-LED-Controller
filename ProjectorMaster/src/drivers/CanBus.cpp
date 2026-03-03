@@ -1,5 +1,5 @@
 #include "drivers/CanBus.h"
-#include "util/BoardPins.h"
+#include "config/PinMap.h"
 #include <Arduino.h>
 
 // ---------------------------------------------------------------------------

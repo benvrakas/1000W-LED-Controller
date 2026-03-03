@@ -2,7 +2,8 @@
 
 #include <Arduino.h>
 #include "drivers/CanBus.h"
-#include "util/BoardPins.h"
+#include "config/PinMap.h"
+#include "config/PowerConfig.h"
 
 PsuService::PsuService(CanBusManager& psu)
     : _psu(psu),

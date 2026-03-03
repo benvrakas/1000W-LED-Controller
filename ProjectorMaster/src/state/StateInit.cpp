@@ -120,46 +120,43 @@ void SystemStartup::setStepStatus(uint8_t bootStep, bool status) {
 //Board pins
 void SystemStartup::boardPinsInit(SystemController& sys) {
     // Encoder Sensor Setup
-    pinMode(BoardPins::PIN_ENCODER_A, INPUT_PULLUP);
-    pinMode(BoardPins::PIN_ENCODER_B, INPUT_PULLUP);
+    pinMode(PinMap::PIN_ENCODER_A, INPUT_PULLUP);
+    pinMode(PinMap::PIN_ENCODER_B, INPUT_PULLUP);
 
     // Initialize encoder state once pins are configured
     sys.context.encoder.begin();
 
     // Power Button Setup
-    pinMode(BoardPins::PIN_SW_BTN, INPUT_PULLUP);
-    pinMode(BoardPins::PIN_SW_LED, OUTPUT);
-    digitalWrite(BoardPins::PIN_SW_LED, LOW); // Start with LED off
+    pinMode(PinMap::PIN_SW_BTN, INPUT_PULLUP);
+    pinMode(PinMap::PIN_SW_LED, OUTPUT);
+    digitalWrite(PinMap::PIN_SW_LED, LOW); // Start with LED off
 
     // Thermal Sensor Setup
-    pinMode(BoardPins::PIN_THERM_LED, INPUT);
-    pinMode(BoardPins::PIN_THERM_WATER, INPUT);
+    pinMode(PinMap::PIN_THERM_LED, INPUT);
+    pinMode(PinMap::PIN_THERM_WATER, INPUT);
 
     // PWM Outputs - Force LOW immediately for safety
-    pinMode(BoardPins::PIN_RAD_FANS_PWM, OUTPUT);
-    digitalWrite(BoardPins::PIN_RAD_FANS_PWM, LOW);
+    pinMode(PinMap::PIN_RAD_FANS_PWM, OUTPUT);
+    digitalWrite(PinMap::PIN_RAD_FANS_PWM, LOW);
     
-    pinMode(BoardPins::PIN_PUMP_PWM, OUTPUT);
-    digitalWrite(BoardPins::PIN_PUMP_PWM, LOW);
+    pinMode(PinMap::PIN_PUMP_PWM, OUTPUT);
+    digitalWrite(PinMap::PIN_PUMP_PWM, LOW);
     
-    pinMode(BoardPins::PIN_PSU_FAN_PWM, OUTPUT);
-    digitalWrite(BoardPins::PIN_PSU_FAN_PWM, LOW);
+    pinMode(PinMap::PIN_PSU_FAN_PWM, OUTPUT);
+    digitalWrite(PinMap::PIN_PSU_FAN_PWM, LOW);
 
-    pinMode(BoardPins::PIN_AUX_FAN_PWM, OUTPUT);
-    digitalWrite(BoardPins::PIN_AUX_FAN_PWM, LOW);
+    pinMode(PinMap::PIN_AUX_FAN_PWM, OUTPUT);
+    digitalWrite(PinMap::PIN_AUX_FAN_PWM, LOW);
 
     // PSU Remote ON/OFF (via N-MOSFET on UHP-1500 remote pin)
-    pinMode(BoardPins::PIN_PSU_ENABLE, OUTPUT);
-    digitalWrite(BoardPins::PIN_PSU_ENABLE, LOW);
-
-    pinMode(BoardPins::PIN_PSU_REMOTE, OUTPUT);
-    digitalWrite(BoardPins::PIN_PSU_REMOTE, LOW);
+    pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
+    digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
 
     // Tachometer Inputs
-    pinMode(BoardPins::PIN_RAD_FAN_TACH, INPUT);
-    pinMode(BoardPins::PIN_PUMP_TACH, INPUT);
-    pinMode(BoardPins::PIN_PSU_FAN_TACH, INPUT);
-    pinMode(BoardPins::PIN_AUX_FAN_TACH, INPUT);
+    pinMode(PinMap::PIN_RAD_FAN_TACH, INPUT);
+    pinMode(PinMap::PIN_PUMP_TACH, INPUT);
+    pinMode(PinMap::PIN_PSU_FAN_TACH, INPUT);
+    pinMode(PinMap::PIN_AUX_FAN_TACH, INPUT);
 
     // Initialise ISRs
     isrInit();
@@ -168,28 +165,28 @@ void SystemStartup::boardPinsInit(SystemController& sys) {
 // Verify the safe connection settings
 void SystemStartup::boardPinsVerify(uint8_t bootStep) {
     if (
-        isPinSetAsInput(BoardPins::PIN_ENCODER_A) && 
-        isPinSetAsInput(BoardPins::PIN_ENCODER_B) &&
-        isPinSetAsInput(BoardPins::PIN_RAD_FAN_TACH) &&
-        isPinSetAsInput(BoardPins::PIN_PUMP_TACH) &&
-        isPinSetAsInput(BoardPins::PIN_PSU_FAN_TACH) &&
-        isPinSetAsInput(BoardPins::PIN_AUX_FAN_TACH) &&
+        isPinSetAsInput(PinMap::PIN_ENCODER_A) && 
+        isPinSetAsInput(PinMap::PIN_ENCODER_B) &&
+        isPinSetAsInput(PinMap::PIN_RAD_FAN_TACH) &&
+        isPinSetAsInput(PinMap::PIN_PUMP_TACH) &&
+        isPinSetAsInput(PinMap::PIN_PSU_FAN_TACH) &&
+        isPinSetAsInput(PinMap::PIN_AUX_FAN_TACH) &&
         
         // Check Input + Pullup state (High = not pressed)
-        (isPinSetAsInput(BoardPins::PIN_SW_BTN) && digitalRead(BoardPins::PIN_SW_BTN) == HIGH) &&
+        (isPinSetAsInput(PinMap::PIN_SW_BTN) && digitalRead(PinMap::PIN_SW_BTN) == HIGH) &&
         
         // Check Outputs + Safety Low state
-        (isPinSetAsOutput(BoardPins::PIN_RAD_FANS_PWM) && digitalRead(BoardPins::PIN_RAD_FANS_PWM) == LOW) &&
-        (isPinSetAsOutput(BoardPins::PIN_PUMP_PWM) && digitalRead(BoardPins::PIN_PUMP_PWM) == LOW) &&
-        (isPinSetAsOutput(BoardPins::PIN_PSU_FAN_PWM) && digitalRead(BoardPins::PIN_PSU_FAN_PWM) == LOW) &&
-        (isPinSetAsOutput(BoardPins::PIN_AUX_FAN_PWM) && digitalRead(BoardPins::PIN_AUX_FAN_PWM) == LOW) &&
+        (isPinSetAsOutput(PinMap::PIN_RAD_FANS_PWM) && digitalRead(PinMap::PIN_RAD_FANS_PWM) == LOW) &&
+        (isPinSetAsOutput(PinMap::PIN_PUMP_PWM) && digitalRead(PinMap::PIN_PUMP_PWM) == LOW) &&
+        (isPinSetAsOutput(PinMap::PIN_PSU_FAN_PWM) && digitalRead(PinMap::PIN_PSU_FAN_PWM) == LOW) &&
+        (isPinSetAsOutput(PinMap::PIN_AUX_FAN_PWM) && digitalRead(PinMap::PIN_AUX_FAN_PWM) == LOW) &&
         
         // Thermistor Sane Range Check
-        (analogRead(BoardPins::PIN_THERM_WATER) > 10 && analogRead(BoardPins::PIN_THERM_WATER) < 4090) &&
-        (analogRead(BoardPins::PIN_THERM_LED) > 10 && analogRead(BoardPins::PIN_THERM_LED) < 4090) &&
+        (analogRead(PinMap::PIN_THERM_WATER) > 10 && analogRead(PinMap::PIN_THERM_WATER) < 4090) &&
+        (analogRead(PinMap::PIN_THERM_LED) > 10 && analogRead(PinMap::PIN_THERM_LED) < 4090) &&
 
         // Check Encoder current readouts
-        (digitalRead(BoardPins::PIN_ENCODER_A) == HIGH || digitalRead(BoardPins::PIN_ENCODER_B) == HIGH)
+        (digitalRead(PinMap::PIN_ENCODER_A) == HIGH || digitalRead(PinMap::PIN_ENCODER_B) == HIGH)
     )   {setStepStatus(bootStep, true);}
 }
 
@@ -217,35 +214,35 @@ void SystemStartup::boardPinsVerify(uint8_t bootStep) {
 
 void SystemStartup::isrInit() {
     //Detatch any existing ISRs to avoid conflicts during re-initialization
-    detachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN));
+    detachInterrupt(digitalPinToInterrupt(PinMap::PIN_SW_BTN));
 
     
     // Attach ISRs after pins are configured
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PUMP_TACH), pumpISR, FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_RAD_FAN_TACH), mainFanISR, FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_AUX_FAN_TACH), auxFanISR, FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_PSU_FAN_TACH), psuFanISR, FALLING);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_SW_BTN), powerButtonISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(PinMap::PIN_PUMP_TACH), pumpISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PinMap::PIN_RAD_FAN_TACH), mainFanISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PinMap::PIN_AUX_FAN_TACH), auxFanISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PinMap::PIN_PSU_FAN_TACH), psuFanISR, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PinMap::PIN_SW_BTN), powerButtonISR, CHANGE);
 
     // Encoder quadrature interrupts on both channels
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_ENCODER_A), encoderAISR, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(BoardPins::PIN_ENCODER_B), encoderBISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(PinMap::PIN_ENCODER_A), encoderAISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(PinMap::PIN_ENCODER_B), encoderBISR, CHANGE);
 
     // Set priority of EIC channels
-    NVIC_SetPriority(BoardPins::EIC_CHANNEL_BUTTON, BoardPins::EIC_PRIORITY_BUTTON);
-    NVIC_SetPriority(BoardPins::EIC_CHANNEL_PUMP_TACH, BoardPins::EIC_PRIORITY_TACH);
-    NVIC_SetPriority(BoardPins::EIC_CHANNEL_MAIN_FAN_TACH, BoardPins::EIC_PRIORITY_TACH);
-    NVIC_SetPriority(BoardPins::EIC_CHANNEL_AUX_FAN_TACH, BoardPins::EIC_PRIORITY_TACH);
-    NVIC_SetPriority(BoardPins::EIC_CHANNEL_PSU_FAN_TACH, BoardPins::EIC_PRIORITY_TACH);
-    NVIC_SetPriority(BoardPins::EIC_CHANNEL_ENCODER_A, BoardPins::EIC_PRIORITY_ENCODER);
-    NVIC_SetPriority(BoardPins::EIC_CHANNEL_ENCODER_B, BoardPins::EIC_PRIORITY_ENCODER);
+    NVIC_SetPriority(PinMap::EIC_CHANNEL_BUTTON, PinMap::EIC_PRIORITY_BUTTON);
+    NVIC_SetPriority(PinMap::EIC_CHANNEL_PUMP_TACH, PinMap::EIC_PRIORITY_TACH);
+    NVIC_SetPriority(PinMap::EIC_CHANNEL_MAIN_FAN_TACH, PinMap::EIC_PRIORITY_TACH);
+    NVIC_SetPriority(PinMap::EIC_CHANNEL_AUX_FAN_TACH, PinMap::EIC_PRIORITY_TACH);
+    NVIC_SetPriority(PinMap::EIC_CHANNEL_PSU_FAN_TACH, PinMap::EIC_PRIORITY_TACH);
+    NVIC_SetPriority(PinMap::EIC_CHANNEL_ENCODER_A, PinMap::EIC_PRIORITY_ENCODER);
+    NVIC_SetPriority(PinMap::EIC_CHANNEL_ENCODER_B, PinMap::EIC_PRIORITY_ENCODER);
 }
 
 //Pump
     void SystemStartup::pumpInit(SystemController& sys) {
         sys.context.pump.begin();
         // Start pump at minimum duty to prime the loop
-        analogWrite(BoardPins::PIN_PUMP_PWM, TachometerConfig::PUMP_DEADSTART_DUTY);
+        analogWrite(PinMap::PIN_PUMP_PWM, TachometerConfig::PUMP_DEADSTART_DUTY);
         setStepStatus(2, true);  // Mark pump init complete
     }
 
@@ -261,9 +258,9 @@ void SystemStartup::isrInit() {
         sys.context.psuFan.begin();
         sys.context.auxFan.begin();
         // Start fans at minimum duty for initial cooling
-        analogWrite(BoardPins::PIN_RAD_FANS_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
-        analogWrite(BoardPins::PIN_PSU_FAN_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
-        analogWrite(BoardPins::PIN_AUX_FAN_PWM, TachometerConfig::AUX_DEADSTART_DUTY);
+        analogWrite(PinMap::PIN_RAD_FANS_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
+        analogWrite(PinMap::PIN_PSU_FAN_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
+        analogWrite(PinMap::PIN_AUX_FAN_PWM, TachometerConfig::AUX_DEADSTART_DUTY);
         setStepStatus(3, true);  // Mark fans init complete
     }
 
@@ -276,10 +273,8 @@ void SystemStartup::isrInit() {
     void SystemStartup::psuInit(SystemController& sys) {
         // PSU CAN initialization happens in main.cpp via initHardware() -> psu.begin()
         // Ensure PSU is disabled at startup
-        pinMode(BoardPins::PIN_PSU_ENABLE, OUTPUT);
-        digitalWrite(BoardPins::PIN_PSU_ENABLE, LOW);
-        pinMode(BoardPins::PIN_PSU_REMOTE, OUTPUT);
-        digitalWrite(BoardPins::PIN_PSU_REMOTE, LOW);
+        pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
+        digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
         setStepStatus(4, true);  // Mark PSU init complete
     }
 

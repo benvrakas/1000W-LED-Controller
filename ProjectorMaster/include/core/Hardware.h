@@ -3,7 +3,7 @@
 #include "drivers/Tachometers.h"
 #include "drivers/Thermistors.h"
 #include "drivers/CanBus.h"
-#include "drivers/Mcp2515CanBackend.h"
+#include "drivers/NativeCanBackend.h"
 #include "drivers/OLED.h"
 #include "drivers/PowerButton.h"
 #include "drivers/Encoder.h"
@@ -23,7 +23,7 @@ extern TachometerManager auxFan;
 extern ThermistorManager ledThermistor;
 extern ThermistorManager pumpThermistor;
 extern CanBusManager psu;
-extern Mcp2515CanBackend canBackend;
+extern NativeCanBackend canBackend;
 extern OledManager oled;
 
 // QSPI Flash

@@ -17,11 +17,8 @@ void handleErrorKillState(SystemController &sys, unsigned long now) {
     psu.setOperation(false);
 
     // 2) Drop all hardware enable lines to the PSU
-    pinMode(BoardPins::PIN_PSU_ENABLE, OUTPUT);
-    digitalWrite(BoardPins::PIN_PSU_ENABLE, LOW);
-
-    pinMode(BoardPins::PIN_PSU_REMOTE, OUTPUT);
-    digitalWrite(BoardPins::PIN_PSU_REMOTE, LOW);
+    pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
+    digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
 
     // Cooling behavior (fans/pump at high speed) will be handled by the
     // CoolingController while the system remains in the ERROR_KILL state.

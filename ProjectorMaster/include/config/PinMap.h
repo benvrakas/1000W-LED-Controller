@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-namespace BoardPins {
+namespace PinMap {
     // ---Encoder Sensors---
     // New hardware mapping: Encoder A/B moved to RX/TX (D14/D15)
     static constexpr uint8_t PIN_ENCODER_A = 14;    // RX: Encoder A (Pull-up)
@@ -29,22 +29,21 @@ namespace BoardPins {
     static constexpr uint8_t PIN_RAD_FAN_TACH = 1;   // D1: Radiator Fan RPM Feedback
     static constexpr uint8_t PIN_PUMP_TACH    = 5;   // D5: Water Pump RPM Feedback
     static constexpr uint8_t PIN_PSU_FAN_TACH = 3;   // D3: PSU Fan RPM Feedback
-    static constexpr uint8_t PIN_AUX_FAN_TACH = 16;  // D16/SPARE: Aux/Lens Cooling Fan RPM Feedback
+    static constexpr uint8_t PIN_AUX_FAN_TACH = 16;  // SPARE: Aux/Lens Cooling Fan RPM Feedback
 
     // ---CAN + OLED I2C Pins---
-    // MCP2515 SPI CAN controller (SPI bus with dedicated CS)
-    static constexpr uint8_t PIN_CAN_CS   = 9;   // D9: MCP2515 chip select
-    // Legacy pin names (for transceiver-based designs)
-    static constexpr uint8_t PIN_CAN_TX   = SDA; // D11
-    static constexpr uint8_t PIN_CAN_RX   = SCL; // D12
+    // Native SAMD51 CAN0 (PA22/PA23) maps to SDA/SCL
+    static constexpr uint8_t PIN_CAN_TX   = SDA; 
+    static constexpr uint8_t PIN_CAN_RX   = SCL; 
 
     // OLED now moved to a secondary I2C bus on A4/A5 (SERCOM5, PIO_SERCOM_ALT)
     static constexpr uint8_t PIN_OLED_SDA = A4;
     static constexpr uint8_t PIN_OLED_SCL = A5;
 
     // ---PSU CONTROL LINES---
-    static constexpr uint8_t PIN_PSU_ENABLE = 7;  // D7: Existing hardware enable line to PSU logic
-    static constexpr uint8_t PIN_PSU_REMOTE = SCK; // SCK pin: drives N-MOSFET gating UHP-1500 remote on/off
+    // SCK pin: drives N-MOSFET gating UHP-1500 remote on/off
+    // "Remote On/Off" - Pulling this high enables the PSU output
+    static constexpr uint8_t PIN_PSU_REMOTE = SCK; 
 
     // ---EIC Channels---
     static constexpr IRQn_Type EIC_CHANNEL_BUTTON = EIC_9_IRQn;

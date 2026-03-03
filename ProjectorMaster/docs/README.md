@@ -1,42 +1,43 @@
-#Projector Controller 
+# ProjectorMaster Firmware (v2.0)
 
-Important Notes:
-    All essential systems need to be non-blocking and all systems must not
-    inturupt essential systems. We can't have a situation where a task is taking up time from an essential proccess. For example if a oled object or function blocks thermistor read for 500ms that is enough time to damage hardware
+Firmware for the 1000W LED Projector Controller, designed for the **Adafruit Feather M4 Express (SAMD51)**.
 
-File Structure:
+## Overview
+This system manages the power and cooling of a high-power COB LED array. It ensures safe operation through rigorous state management, thermal monitoring, and active fault protection.
 
-Main Logic Structure:
-    Interupt - on seperate hardware //All Interupt data has to be stored as a volatile
-        Encoder - Interupt -- Rank 3
-            300 pulse
-        Power button presses - Interupt -- Rank 1 --- Port Pin PB09, EXTINT channel 9
-        Tachocometer Pulse Readings - Interupt -- Rank 2
-    Fast Systems
-        PM Bus - Millis(50)
-            Current controlled - Max = 20.8333
-    Slow Systems
-        Main Fan PWM - Millis(100) - Fan curve based on water temp readings
-        Aux Fan PWM - Millis(20) - PWM = Brightness level (linked to encoder position)
-        PSU Fan PWM - Millis(20) - Fan curve based on LED temp readings  
-        Pump PWM - Millis(20) - Fan curve based on LED temp readings (EK-D5 Vario Motor 12-24V DC Pump Motor)
-        Thermistor Ideal Reading
-            50c for water - Millis(100)
-            75c for LED - Millis(20)
-        OLED updates
-        Fan Curves - Temperature-to-duty mapping via CoolingService
-            Configuration defined in include/config/ThermalConfig.h
-            Read thermistor temperatures
-            Map temperature to PWM duty cycle
-            Apply duty via TachometerManager.setDuty()
+### Key Features
+*   **Power Control**: Digital control of **Mean Well UHP-1500-48** PSU via Native CAN Bus (PMBus protocol).
+*   **Active Cooling**: PID-free temperature control using configurable Fan Curves for Radiator Fans, Pump, and Aux Fans.
+*   **User Interface**: OLED status display (128x32) and Rotary Encoder input.
+*   **Safety**:
+    *   Latched `ERROR_KILL` state for critical faults (Over-temp, Pump failure, CAN timeout).
+    *   Hardware enable lines dropped immediately on fault.
+    *   **QSPI Error Logging**: Crashes and faults are saved to onboard flash (`error_log.csv`) for post-mortem analysis.
 
+## Hardware
+*   **MCU**: Adafruit Feather M4 Express (ATSAMD51).
+*   **CAN**: Integrated SAMD51 CAN Controller + ISO1050 Transceiver (SDA/SCL pins).
+*   **Storage**: 2MB QSPI Flash (GD25Q16).
 
-        /**
- * THE "NON-BLOCKING" RULESET:
- * * 1. NO DELAYS: Never use delay() in any function.
- * 2. NO UNBOUNDED WHILES: Never use while(condition) unless you have 
- * a secondary timeout check inside the while loop.
- * 3. FAST PATH vs SLOW PATH: 
- * - Safety (Tachs/Killswitch) = FAST PATH (Runs every loop)
- * - UI/Sensors = SLOW PATH (Runs on timers)
- */
+## Directory Structure
+*   `src/` - Implementation files.
+    *   `core/` - Hardware instantiation (`Hardware.cpp`) and dependency injection (`AppContext`).
+    *   `services/` - Business logic (`CoolingService`, `PsuService`).
+    *   `drivers/` - Hardware abstraction (`NativeCanBackend`, `OLED`).
+    *   `state/` - Finite State Machine (`Init`, `Run`, `Error`).
+*   `include/config/` - System configuration.
+    *   `PinMap.h` - Pin definitions.
+    *   `ThermalConfig.h` - Fan curves and temperature limits.
+    *   `PowerConfig.h` - PSU and CAN settings.
+*   `docs/` - Documentation.
+    *   `ARCHITECTURE.md` - Detailed architectural design.
+
+## Building & Flashing
+This project uses **PlatformIO**.
+
+1.  **Build**: `pio run`
+2.  **Upload**: `pio run -t upload`
+3.  **Monitor**: `pio device monitor`
+
+## License
+Proprietary / Internal Use.

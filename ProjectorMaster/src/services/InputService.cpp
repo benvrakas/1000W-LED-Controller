@@ -59,6 +59,6 @@ void InputService::forceKnobToZero() {
 }
 
 void InputService::setButtonLed(bool on) {
-    digitalWrite(BoardPins::PIN_SW_LED, on ? HIGH : LOW);
+    digitalWrite(PinMap::PIN_SW_LED, on ? HIGH : LOW);
 }
 

@@ -24,8 +24,8 @@ void PsuService::begin() {
     _isOn               = false;
 
     // Ensure remote gate is in known OFF state
-    pinMode(BoardPins::PIN_PSU_REMOTE, OUTPUT);
-    digitalWrite(BoardPins::PIN_PSU_REMOTE, LOW);
+    pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
+    digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
 }
 
 void PsuService::requestOn() {
@@ -36,8 +36,8 @@ void PsuService::requestOn() {
     
     // Enable CAN operation and remote gate
     _psu.setOperation(true);
-    pinMode(BoardPins::PIN_PSU_REMOTE, OUTPUT);
-    digitalWrite(BoardPins::PIN_PSU_REMOTE, HIGH);
+    pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
+    digitalWrite(PinMap::PIN_PSU_REMOTE, HIGH);
 }
 
 void PsuService::requestOff() {
@@ -103,7 +103,7 @@ void PsuService::update(unsigned long now) {
     // 4) If we're in shutdown mode and current has ramped down, disable PSU
     if (!_isOn && _appliedCurrentFrac <= 0.01f) {
         _psu.setOperation(false);
-        digitalWrite(BoardPins::PIN_PSU_REMOTE, LOW);
+        digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
     }
 }
 

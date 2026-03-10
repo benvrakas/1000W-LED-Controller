@@ -7,38 +7,21 @@
 #include "drivers/Tachometers.h"
 #include "config/ThermalConfig.h"
 
-// Helper: map a temperature into an 8-bit duty cycle with clamping.
-static uint8_t mapTempToDuty(float tempC,
-                             float tLow, float tHigh,
-                             uint8_t dutyMin, uint8_t dutyMax) {
-    if (tempC <= tLow) {
-        return dutyMin;
-    }
-    if (tempC >= tHigh) {
-        return dutyMax;
-    }
-
-    float frac = (tempC - tLow) / (tHigh - tLow);
-    if (frac < 0.0f) frac = 0.0f;
-    if (frac > 1.0f) frac = 1.0f;
-
-    float duty = dutyMin + frac * static_cast<float>(dutyMax - dutyMin);
-    if (duty < 0.0f) duty = 0.0f;
-    if (duty > 255.0f) duty = 255.0f;
-    return static_cast<uint8_t>(duty + 0.5f);
-}
-
 CoolingService::CoolingService(TachometerManager& mainFan, TachometerManager& psuFan,
                                TachometerManager& pump, TachometerManager& auxFan,
                                ThermistorManager& ledThermistor, ThermistorManager& pumpThermistor)
     : _mainFan(mainFan), _psuFan(psuFan), _pump(pump), _auxFan(auxFan),
       _ledThermistor(ledThermistor), _pumpThermistor(pumpThermistor),
-      _state{}
+      _state{}, _lastUpdateMs(0), _ledIntegral(0.0f), _waterIntegral(0.0f)
 {}
 
 void CoolingService::begin() {
     // Ensure PWM writes use 8-bit resolution for all fan/pump channels.
     analogWriteResolution(8);
+    
+    _lastUpdateMs = millis();
+    _ledIntegral = 0.0f;
+    _waterIntegral = 0.0f;
 }
 
 void CoolingService::update(unsigned long now) {
@@ -56,37 +39,63 @@ void CoolingService::update(unsigned long now) {
     _state.ledTempC   = ledTempC;
     _state.waterTempC = waterTempC;
 
-    // 3) Compute PWM duties using fan curves (temperature-based)
+    // Time delta for integral calculation
+    float dt = (now - _lastUpdateMs) / 1000.0f;
+    if (dt <= 0.0f || dt > 1.0f) dt = 0.1f; // Prevent huge leaps on delays or first cycle
+    _lastUpdateMs = now;
 
-    // Radiator fans + PSU fan driven primarily by LED temperature.
-    uint8_t mainFanDuty = mapTempToDuty(
-        ledTempC,
-        FanCurveConfig::MAIN_TEMP_MIN, FanCurveConfig::MAIN_TEMP_MAX,
-        FanCurveConfig::MAIN_DUTY_MIN, FanCurveConfig::MAIN_DUTY_MAX
-    );
+    // 3) PI Controller for LED Cooling (Radiator Fans, PSU Fan, Aux Fan)
+    float ledError = ledTempC - FanCurveConfig::TARGET_TEMP_LED;
+    
+    // Only accumulate integral when error is positive (we only cool, we don't heat)
+    // Or allow negative error to decrease integral back to 0
+    if (ledError > 0 || _ledIntegral > 0) {
+        _ledIntegral += ledError * dt;
+    }
+    
+    // Clamp integral to prevent windup
+    if (_ledIntegral > FanCurveConfig::LED_INTEGRAL_MAX) _ledIntegral = FanCurveConfig::LED_INTEGRAL_MAX;
+    if (_ledIntegral < 0.0f) _ledIntegral = 0.0f;
+
+    float ledPI_Output = (FanCurveConfig::LED_KP * ledError) + (FanCurveConfig::LED_KI * _ledIntegral);
+    
+    // Calculate final duties based on minimums + PI output
+    float mainFanFloat = FanCurveConfig::MAIN_DUTY_MIN + ledPI_Output;
+    if (mainFanFloat > FanCurveConfig::MAIN_DUTY_MAX) mainFanFloat = FanCurveConfig::MAIN_DUTY_MAX;
+    if (mainFanFloat < FanCurveConfig::MAIN_DUTY_MIN) mainFanFloat = FanCurveConfig::MAIN_DUTY_MIN;
+    
+    float auxFanFloat = FanCurveConfig::AUX_DUTY_MIN + ledPI_Output;
+    if (auxFanFloat > FanCurveConfig::AUX_DUTY_MAX) auxFanFloat = FanCurveConfig::AUX_DUTY_MAX;
+    if (auxFanFloat < FanCurveConfig::AUX_DUTY_MIN) auxFanFloat = FanCurveConfig::AUX_DUTY_MIN;
+
+    uint8_t mainFanDuty = static_cast<uint8_t>(mainFanFloat);
+    uint8_t auxDuty = static_cast<uint8_t>(auxFanFloat);
+    
     _mainFan.setDuty(mainFanDuty);
-
-    // PSU fan tied to same curve as radiator fans
-    uint8_t psuFanDuty = mainFanDuty;
-    _psuFan.setDuty(psuFanDuty);
-
-    // Pump driven by water temperature.
-    uint8_t pumpDuty = mapTempToDuty(
-        waterTempC,
-        FanCurveConfig::PUMP_TEMP_MIN, FanCurveConfig::PUMP_TEMP_MAX,
-        FanCurveConfig::PUMP_DUTY_MIN, FanCurveConfig::PUMP_DUTY_MAX
-    );
-    _pump.setDuty(pumpDuty);
-
-    // Aux (lens) fan based on LED temperature for now.
-    uint8_t auxDuty = mapTempToDuty(
-        ledTempC,
-        FanCurveConfig::AUX_TEMP_MIN, FanCurveConfig::AUX_TEMP_MAX,
-        FanCurveConfig::AUX_DUTY_MIN, FanCurveConfig::AUX_DUTY_MAX
-    );
+    _psuFan.setDuty(mainFanDuty); // PSU fan follows main fan
     _auxFan.setDuty(auxDuty);
 
-    // 4) Read RPM values from tachometer managers
+
+    // 4) PI Controller for Water Cooling (Pump)
+    float waterError = waterTempC - FanCurveConfig::TARGET_TEMP_WATER;
+
+    if (waterError > 0 || _waterIntegral > 0) {
+        _waterIntegral += waterError * dt;
+    }
+
+    if (_waterIntegral > FanCurveConfig::WATER_INTEGRAL_MAX) _waterIntegral = FanCurveConfig::WATER_INTEGRAL_MAX;
+    if (_waterIntegral < 0.0f) _waterIntegral = 0.0f;
+
+    float waterPI_Output = (FanCurveConfig::WATER_KP * waterError) + (FanCurveConfig::WATER_KI * _waterIntegral);
+    
+    float pumpFloat = FanCurveConfig::PUMP_DUTY_MIN + waterPI_Output;
+    if (pumpFloat > FanCurveConfig::PUMP_DUTY_MAX) pumpFloat = FanCurveConfig::PUMP_DUTY_MAX;
+    if (pumpFloat < FanCurveConfig::PUMP_DUTY_MIN) pumpFloat = FanCurveConfig::PUMP_DUTY_MIN;
+
+    uint8_t pumpDuty = static_cast<uint8_t>(pumpFloat);
+    _pump.setDuty(pumpDuty);
+
+    // 5) Read RPM values from tachometer managers
     _state.mainFanRPM = _mainFan.getRPM();
     _state.auxFanRPM  = _auxFan.getRPM();
     _state.psuFanRPM  = _psuFan.getRPM();

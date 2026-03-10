@@ -54,5 +54,9 @@ private:
     ThermistorManager& _pumpThermistor;
 
     CoolingState _state;
-};
 
+    // PI Controller State
+    unsigned long _lastUpdateMs;
+    float _ledIntegral;
+    float _waterIntegral;
+};

@@ -38,21 +38,26 @@ namespace TachometerConfig {
 }
 
 namespace FanCurveConfig {
-    // Radiator fans + PSU fan (driven by LED temperature)
-    static constexpr float   MAIN_TEMP_MIN = 35.0f;
-    static constexpr float   MAIN_TEMP_MAX = 75.0f;
+    // Limits
     static constexpr uint8_t MAIN_DUTY_MIN = 64;  // ~25%
     static constexpr uint8_t MAIN_DUTY_MAX = 255; // 100%
 
-    // Pump (driven by water temperature)
-    static constexpr float   PUMP_TEMP_MIN = 30.0f;
-    static constexpr float   PUMP_TEMP_MAX = 50.0f;
     static constexpr uint8_t PUMP_DUTY_MIN = 77;  // ~30%
     static constexpr uint8_t PUMP_DUTY_MAX = 255; // 100%
 
-    // Aux/Lens fan (driven by LED temperature)
-    static constexpr float   AUX_TEMP_MIN = 30.0f;
-    static constexpr float   AUX_TEMP_MAX = 75.0f;
     static constexpr uint8_t AUX_DUTY_MIN = 51;   // ~20%
     static constexpr uint8_t AUX_DUTY_MAX = 255;  // 100%
+
+    // PI Controller Configuration (Target Temps & Tuning)
+    // LED Cooling (Radiator, PSU, Aux Fans)
+    static constexpr float TARGET_TEMP_LED = 55.0f;
+    static constexpr float LED_KP = 20.0f;  // Duty increase per degree C above target
+    static constexpr float LED_KI = 0.5f;   // Duty increase per degree C per second
+    static constexpr float LED_INTEGRAL_MAX = 100.0f; // Limit integral windup
+
+    // Water Cooling (Pump)
+    static constexpr float TARGET_TEMP_WATER = 40.0f;
+    static constexpr float WATER_KP = 15.0f;
+    static constexpr float WATER_KI = 0.3f;
+    static constexpr float WATER_INTEGRAL_MAX = 100.0f;
 }

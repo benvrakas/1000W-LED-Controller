@@ -4,8 +4,13 @@
 NativeCanBackend::NativeCanBackend() {}
 
 bool NativeCanBackend::begin(uint32_t bitrate) {
-    // Feather M4 CAN0 is on PA22/PA23 (SDA/SCL)
-    // CAN library defaults to these pins on Feather M4
+    // Feather M4 CAN Express uses internal CAN transceiver with built-in standby and boost
+    // Need to initialize these pins for the CAN transceiver to operate
+    pinMode(PIN_CAN_STANDBY, OUTPUT);
+    digitalWrite(PIN_CAN_STANDBY, LOW); // LOW means active
+    pinMode(PIN_CAN_BOOSTEN, OUTPUT);
+    digitalWrite(PIN_CAN_BOOSTEN, HIGH); // HIGH means boost enabled
+
     return CAN.begin(bitrate);
 }
 

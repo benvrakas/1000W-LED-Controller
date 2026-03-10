@@ -14,8 +14,6 @@
 // (Extern declarations are also in their respective driver headers, 
 // but collected here for central access if needed)
 
-extern TwoWire oledWire;
-extern PowerButtonManager powerButton;
 extern TachometerManager pump;
 extern TachometerManager mainFan;
 extern TachometerManager psuFan;

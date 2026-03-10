@@ -25,8 +25,8 @@ struct CanTelemetry {
 
 class CanBusManager {
 public:
-    // txPin / rxPin are the MCU pins wired to the CAN transceiver (ISO1050)
-    CanBusManager(uint8_t txPin, uint8_t rxPin);
+    // Feather M4 CAN uses internal transceiver, no pins needed
+    CanBusManager();
 
     // Attach a concrete backend and bring up the bus
     void begin(ICanBackend* backend);
@@ -44,8 +44,6 @@ public:
     CanTelemetry getTelemetry() const;     // last cached telemetry snapshot
 
 private:
-    uint8_t     _txPin;
-    uint8_t     _rxPin;
     ICanBackend* _backend;
 
     // Slew-rate limiting state

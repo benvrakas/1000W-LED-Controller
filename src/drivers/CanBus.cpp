@@ -48,8 +48,8 @@ static uint16_t encodeLinear11(float value, int exponent) {
     return expBits | mantBits;
 }
 
-CanBusManager::CanBusManager(uint8_t txPin, uint8_t rxPin)
-    : _txPin(txPin), _rxPin(rxPin), _backend(nullptr),
+CanBusManager::CanBusManager()
+    : _backend(nullptr),
       _targetPowerPct(0.0f), _currentPowerPct(0.0f), _lastSetpointMs(0),
       _lastTelemetryReqMs(0),
       _telemetry{0.0f, 0.0f, 0.0f, 0, false}, _fault(false)

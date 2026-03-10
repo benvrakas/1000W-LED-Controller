@@ -1,6 +1,6 @@
 # ProjectorMaster Firmware (v2.0)
 
-Firmware for the 1000W LED Projector Controller, designed for the **Adafruit Feather M4 Express (SAMD51)**.
+Firmware for the 1000W LED Projector Controller, designed for the **Adafruit Feather M4 CAN Express (SAME51)**.
 
 ## Overview
 This system manages the power and cooling of a high-power COB LED array. It ensures safe operation through rigorous state management, thermal monitoring, and active fault protection.
@@ -15,9 +15,11 @@ This system manages the power and cooling of a high-power COB LED array. It ensu
     *   **QSPI Error Logging**: Crashes and faults are saved to onboard flash (`error_log.csv`) for post-mortem analysis.
 
 ## Hardware
-*   **MCU**: Adafruit Feather M4 Express (ATSAMD51).
-*   **CAN**: Integrated SAMD51 CAN Controller + ISO1050 Transceiver (SDA/SCL pins).
+*   **MCU**: Adafruit Feather M4 CAN Express (ATSAME51J19A).
+*   **CAN**: Integrated SAME51 CAN Controller + TCAN1051 Transceiver (Built-in to Feather M4 CAN).
 *   **Storage**: 2MB QSPI Flash (GD25Q16).
+
+For a complete pinout mapping, refer to [Pinout.md](Pinout.md).
 
 ## Directory Structure
 *   `src/` - Implementation files.

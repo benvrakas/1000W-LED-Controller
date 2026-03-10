@@ -4,59 +4,55 @@
 
 namespace PinMap {
     // ---Encoder Sensors---
-    // New hardware mapping: Encoder A/B moved to RX/TX (D14/D15)
-    static constexpr uint8_t PIN_ENCODER_A = 14;    // RX: Encoder A (Pull-up)
-    static constexpr uint8_t PIN_ENCODER_B = 15;    // TX: Encoder B (Pull-up)
+    // Optimized for Feather M4 CAN Express
+    static constexpr uint8_t PIN_ENCODER_A = 0;     // RX (PB17): Encoder A (EIC 1)
+    static constexpr uint8_t PIN_ENCODER_B = 1;     // TX (PB16): Encoder B (EIC 0)
 
     // ---Power Switch Setup---
-    static constexpr uint8_t PIN_SW_BTN = A3;       // Switch (Pull-up)
-    static constexpr uint8_t PIN_SW_LED = A2;       // Illuminated Switch LED Ring
+    static constexpr uint8_t PIN_SW_BTN = A3;       // A3 (PB09): Switch Signal
+    static constexpr uint8_t PIN_SW_LED = A2;       // A2 (PB08): Switch LED
 
     // ---THERMAL SENSORS---
-    // New mapping: LED and Water thermistors on A0/A1
-    static constexpr uint8_t PIN_THERM_LED = A0;     // LED Temp
-    static constexpr uint8_t PIN_THERM_WATER = A1;   // Water Temp
+    static constexpr uint8_t PIN_THERM_LED = A0;     // A0 (PA02): 10K+10K voltage divider for LED Temp
+    static constexpr uint8_t PIN_THERM_WATER = A1;   // A1 (PA05): 10K+10K voltage divider for Water Temp
 
-    // ---ISOLATED PWM OUTPUTS (Via ADuM)---
-    // New mapping from architecture v2.0 notes
-    static constexpr uint8_t PIN_RAD_FANS_PWM = 0;   // D0: Radiator Fan Speed Control (fans 1–3)
-    static constexpr uint8_t PIN_PUMP_PWM     = 4;   // D4: Water Pump Speed Control
-    static constexpr uint8_t PIN_PSU_FAN_PWM  = 2;   // D2: PSU Fan Speed Control
-    static constexpr uint8_t PIN_AUX_FAN_PWM  = 6;   // D6: Aux/Lens Cooling Fan Speed Control
+    // ---PWM OUTPUTS---
+    static constexpr uint8_t PIN_RAD_FANS_PWM = 5;   // D5 (PA16): Radiator Fan PWM
+    static constexpr uint8_t PIN_PUMP_PWM     = 6;   // D6 (PA18): Pump PWM
+    static constexpr uint8_t PIN_PSU_FAN_PWM  = 9;   // D9 (PA19): PSU Fan PWM
+    static constexpr uint8_t PIN_AUX_FAN_PWM  = 4;   // D4 (PA14): Aux Fan PWM
 
-    // ---ISOLATED TACH INPUTS (Via ADuM)---
-    // New mapping from architecture v2.0 notes
-    static constexpr uint8_t PIN_RAD_FAN_TACH = 1;   // D1: Radiator Fan RPM Feedback
-    static constexpr uint8_t PIN_PUMP_TACH    = 5;   // D5: Water Pump RPM Feedback
-    static constexpr uint8_t PIN_PSU_FAN_TACH = 3;   // D3: PSU Fan RPM Feedback
-    static constexpr uint8_t PIN_AUX_FAN_TACH = 16;  // SPARE: Aux/Lens Cooling Fan RPM Feedback
+    // ---TACH INPUTS---
+    static constexpr uint8_t PIN_RAD_FAN_TACH = 10;  // D10 (PA20): Radiator Fan Tach (EIC 4)
+    static constexpr uint8_t PIN_PUMP_TACH    = 11;  // D11 (PA21): Pump Tach (EIC 5)
+    static constexpr uint8_t PIN_PSU_FAN_TACH = 12;  // D12 (PA22): PSU Fan Tach (EIC 6)
+    static constexpr uint8_t PIN_AUX_FAN_TACH = 13;  // D13 (PA23): Aux Fan Tach (EIC 7)
 
-    // ---CAN + OLED I2C Pins---
-    // Native SAMD51 CAN0 (PA22/PA23) maps to SDA/SCL
-    static constexpr uint8_t PIN_CAN_TX   = SDA; 
-    static constexpr uint8_t PIN_CAN_RX   = SCL; 
+    // ---CAN BUS---
+    // Feather M4 CAN has built-in CAN transceiver terminal block
+    // No GPIO pins needed to be passed around
 
-    // OLED now moved to a secondary I2C bus on A4/A5 (SERCOM5, PIO_SERCOM_ALT)
-    static constexpr uint8_t PIN_OLED_SDA = A4;
-    static constexpr uint8_t PIN_OLED_SCL = A5;
+    // ---OLED Display---
+    // Standard I2C on SDA/SCL (Feather Wing OLED)
+    static constexpr uint8_t PIN_OLED_SDA = SDA;     // SDA (PA12)
+    static constexpr uint8_t PIN_OLED_SCL = SCL;     // SCL (PA13)
 
     // ---PSU CONTROL LINES---
-    // SCK pin: drives N-MOSFET gating UHP-1500 remote on/off
-    // "Remote On/Off" - Pulling this high enables the PSU output
-    static constexpr uint8_t PIN_PSU_REMOTE = SCK; 
+    static constexpr uint8_t PIN_PSU_REMOTE = A4;    // A4 (PA04): Remote On/Off
 
     // ---EIC Channels---
-    static constexpr IRQn_Type EIC_CHANNEL_BUTTON = EIC_9_IRQn;
-    static constexpr IRQn_Type EIC_CHANNEL_PUMP_TACH = EIC_0_IRQn;
-    static constexpr IRQn_Type EIC_CHANNEL_MAIN_FAN_TACH = EIC_1_IRQn;
-    static constexpr IRQn_Type EIC_CHANNEL_AUX_FAN_TACH = EIC_0_IRQn;
-    static constexpr IRQn_Type EIC_CHANNEL_PSU_FAN_TACH = EIC_7_IRQn;
-    static constexpr IRQn_Type EIC_CHANNEL_ENCODER_A = EIC_6_IRQn;
-    static constexpr IRQn_Type EIC_CHANNEL_ENCODER_B = EIC_4_IRQn;
+    // Mapped based on SAMD51 Datasheet/Variant for Feather M4 CAN Express
+    // Note: Verify variant.cpp for exact EIC mappings on your board version
+    static constexpr IRQn_Type EIC_CHANNEL_BUTTON = EIC_9_IRQn;         // A3 (PB09) -> EIC 9
+    static constexpr IRQn_Type EIC_CHANNEL_ENCODER_A = EIC_1_IRQn;      // RX (PB17) -> EIC 1
+    static constexpr IRQn_Type EIC_CHANNEL_ENCODER_B = EIC_0_IRQn;      // TX (PB16) -> EIC 0
+    static constexpr IRQn_Type EIC_CHANNEL_MAIN_FAN_TACH = EIC_4_IRQn;  // D10 (PA20) -> EIC 4
+    static constexpr IRQn_Type EIC_CHANNEL_PUMP_TACH = EIC_5_IRQn;      // D11 (PA21) -> EIC 5
+    static constexpr IRQn_Type EIC_CHANNEL_PSU_FAN_TACH = EIC_6_IRQn;   // D12 (PA22) -> EIC 6
+    static constexpr IRQn_Type EIC_CHANNEL_AUX_FAN_TACH = EIC_7_IRQn;   // D13 (PA23) -> EIC 7
 
     // ---EIC Priority Ranks---
     static constexpr uint8_t EIC_PRIORITY_BUTTON = 0;
     static constexpr uint8_t EIC_PRIORITY_TACH = 1;
     static constexpr uint8_t EIC_PRIORITY_ENCODER = 2;
-    
 }

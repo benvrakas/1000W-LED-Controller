@@ -1,7 +1,7 @@
 # ProjectorMaster Architecture v2.0
 
 ## 1. System Overview
-Firmware for a high-power (1000W) LED projector controller based on the **Adafruit Feather M4 Express (SAMD51)**. It manages a **Mean Well UHP-1500-48** power supply via CAN Bus, controls active liquid cooling, and provides a user interface via a Button, OLED and Rotary Encoder.
+Firmware for a high-power (1000W) LED projector controller based on the **Adafruit Feather M4 CAN Express (SAME51)**. It manages a **Mean Well UHP-1500-48** power supply via CAN Bus, controls active liquid cooling, and provides a user interface via a Button, OLED and Rotary Encoder.
 
 ## 2. Core Architectural Pattern
 The system follows a **Dependency Injection (DI)** pattern to decouple logic from hardware.
@@ -36,7 +36,7 @@ Logic is divided into isolated services, injected with their specific dependenci
 ## 4. Configuration
 All system tuning parameters are centralized in `include/config/`:
 
-*   **`PinMap.h`**: Hardware pin definitions (Native CAN on SDA/SCL, etc.).
+*   **`PinMap.h`**: Hardware pin definitions (PWM, Tach, I2C, etc. CAN uses internal board pins).
 *   **`ThermalConfig.h`**: Thermistor beta values, Fan/Pump RPM limits, and **Fan Curves** (Temperature -> PWM mapping).
 *   **`PowerConfig.h`**: PSU voltage/current limits, CAN bus bitrate, and Slew rates.
 

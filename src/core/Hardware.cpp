@@ -7,18 +7,11 @@
 // Global Hardware Instantiation
 // ---------------------------------------------------------------------------
 
-// Secondary I2C bus for the OLED on SERCOM5 (A4/A5, PIO_SERCOM_ALT)
-TwoWire oledWire(&sercom5, PinMap::PIN_OLED_SDA, PinMap::PIN_OLED_SCL);
-
-// SERCOM5 Interrupt Handler
-void SERCOM5_Handler() {
-    oledWire.onService();
-}
-
 // Power Button
 PowerButtonManager powerButton(PinMap::PIN_SW_BTN, PinMap::PIN_SW_LED);
 
 // Tachometers (Fans & Pump)
+// Note: Aux and PSU fan mapping updated to match new pinout
 TachometerManager pump(PinMap::PIN_PUMP_PWM, PinMap::PIN_PUMP_TACH,
     TachometerConfig::PUMP_DEADSTART_DUTY, TachometerConfig::MAX_PUMP_RPM,
     TachometerConfig::PUMP_STALL_RPM);
@@ -43,10 +36,12 @@ ThermistorManager pumpThermistor(PinMap::PIN_THERM_WATER, ThermistorConfig::BETA
     ThermistorConfig::SERIES_RESISTOR_PUMP);
 
 // CAN Bus & PSU
-CanBusManager psu(PinMap::PIN_CAN_TX, PinMap::PIN_CAN_RX);
+// Uses native CAN controller
+CanBusManager psu;
 NativeCanBackend canBackend;
 
 // OLED Display
+// Uses standard Wire interface (SDA/SCL)
 OledManager oled(PinMap::PIN_OLED_SDA, PinMap::PIN_OLED_SCL, OLEDScreenConfig::DEFAULT_ADDRESS,
     OLEDScreenConfig::SCREEN_WIDTH, OLEDScreenConfig::SCREEN_HEIGHT);
 
@@ -59,10 +54,10 @@ FatFileSystem fatfs;
 // Hardware Initialization
 // ---------------------------------------------------------------------------
 void initHardware() {
-    // Bring up the dedicated OLED I2C bus
-    oledWire.begin();
-    oledWire.setClock(OLEDScreenConfig::BUS_SPEED);
-    oled.begin(&oledWire);
+    // Initialize standard I2C for OLED
+    Wire.begin();
+    Wire.setClock(OLEDScreenConfig::BUS_SPEED);
+    oled.begin(&Wire);
 
     // Initialize SPI and CAN backend for PSU communication
     SPI.begin();

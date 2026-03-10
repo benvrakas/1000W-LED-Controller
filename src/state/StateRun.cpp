@@ -39,6 +39,7 @@ void handleRunState(SystemController &sys, unsigned long now) {
 
     // Handle ON/OFF transitions for PSU control via PsuController
     if (sys.input.edgeArmedOn()) {
+        sys.input.forceKnobToZero(); // Ensure knob is reset when arming
         sys.psu.requestOn();
     }
 

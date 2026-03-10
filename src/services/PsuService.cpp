@@ -11,7 +11,8 @@ PsuService::PsuService(CanBusManager& psu)
       _appliedCurrentFrac(0.0f),
       _lastUpdateMs(0),
       _slewRatePctPerSec(SLEW_RATE_NORMAL_PCT_PER_SEC),
-      _isOn(false) {}
+      _isOn(false),
+      _shutdownStartTimeMs(0) {}
 
 void PsuService::begin() {
     // Initialize timing baseline for slew calculations
@@ -22,6 +23,7 @@ void PsuService::begin() {
     _appliedCurrentFrac = 0.0f;
     _slewRatePctPerSec  = SLEW_RATE_NORMAL_PCT_PER_SEC;
     _isOn               = false;
+    _shutdownStartTimeMs = 0;
 
     // Ensure remote gate is in known OFF state
     pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
@@ -45,6 +47,7 @@ void PsuService::requestOff() {
     
     _isOn = false;
     _slewRatePctPerSec = SLEW_RATE_SHUTDOWN_PCT_PER_SEC;
+    _shutdownStartTimeMs = millis();
     
     // Note: actual CAN disable and remote gate LOW happens in update()
     // once applied current reaches ~0, for safe shutdown sequencing.
@@ -101,9 +104,12 @@ void PsuService::update(unsigned long now) {
     _psu.update(now);
 
     // 4) If we're in shutdown mode and current has ramped down, disable PSU
-    if (!_isOn && _appliedCurrentFrac <= 0.01f) {
-        _psu.setOperation(false);
-        digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
+    if (!_isOn) {
+        bool timeoutReached = (now - _shutdownStartTimeMs > 3000);
+        if (_appliedCurrentFrac <= 0.01f || timeoutReached) {
+            _psu.setOperation(false);
+            digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
+        }
     }
 }
 

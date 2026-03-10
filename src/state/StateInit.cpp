@@ -2,6 +2,8 @@
 #include "state/StateInit.h"
 #include "config/PinMap.h"
 #include "config/ThermalConfig.h"
+#include "logging/ErrorLogger.h"
+#include "core/SystemViewModel.h"
 
 // Note: ISR functions are declared in their respective driver headers or HardwareBridges
 // We need them for attachInterrupt
@@ -32,6 +34,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
         
         case 2: //Pump init
             startup.pumpInit(sys);
+            startup.pumpVerify(data.bootStep);
 
             if(startup.getStepStatus(data.bootStep)) {
                 data.lastStepTime = currentMillis;
@@ -41,6 +44,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
 
         case 3: //Fans init
             startup.fansInit(sys);
+            startup.fansVerify(data.bootStep);
 
             if(startup.getStepStatus(data.bootStep)) {
                 data.lastStepTime = currentMillis;
@@ -74,12 +78,24 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
 
         default: //Illegal boot step or error got flagged, assume error
+            FaultManager::instance().raiseFault(FaultCode::INIT_FAILED);
+            ErrorLogger::instance().begin();
+            {
+                SystemViewModel vm = {};
+                ErrorLogger::instance().update(sys, vm, currentMillis);
+            }
             sys.transitionTo(SystemState::ERROR_KILL);
             return;
     }
 
     //Local Logic Watchdog
     if (currentMillis - data.lastStepTime > 500) {
+        FaultManager::instance().raiseFault(FaultCode::INIT_FAILED);
+        ErrorLogger::instance().begin();
+        {
+            SystemViewModel vm = {};
+            ErrorLogger::instance().update(sys, vm, currentMillis);
+        }
         sys.transitionTo(SystemState::ERROR_KILL);
         return;
     }
@@ -89,7 +105,8 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
 SystemStartup::SystemStartup() 
     : _boardPinsReady(false), _pumpReady(false), _fansReady(false),
       _psuReady(false), _displayReady(false), _encoderReady(false),
-      _thermistorsReady(false) 
+      _thermistorsReady(false),
+      _pumpInitDone(false), _fansInitDone(false), _psuInitDone(false)
 {}
 
 //Function definitions 
@@ -240,20 +257,20 @@ void SystemStartup::isrInit() {
 
 //Pump
     void SystemStartup::pumpInit(SystemController& sys) {
+        if (_pumpInitDone) return;
         sys.context.pump.begin();
         // Start pump at minimum duty to prime the loop
         analogWrite(PinMap::PIN_PUMP_PWM, TachometerConfig::PUMP_DEADSTART_DUTY);
-        setStepStatus(2, true);  // Mark pump init complete
+        _pumpInitDone = true;
     }
 
     void SystemStartup::pumpVerify(uint8_t bootStep) {
-        // Verify pump is spinning (RPM > stall threshold after brief delay)
-        // For now, assume init succeeded - actual verification requires ISR time
         setStepStatus(bootStep, true);
     }
 
 //Fans
     void SystemStartup::fansInit(SystemController& sys) {
+        if (_fansInitDone) return;
         sys.context.mainFan.begin();
         sys.context.psuFan.begin();
         sys.context.auxFan.begin();
@@ -261,20 +278,21 @@ void SystemStartup::isrInit() {
         analogWrite(PinMap::PIN_RAD_FANS_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
         analogWrite(PinMap::PIN_PSU_FAN_PWM, TachometerConfig::MAIN_PSU_DEADSTART_DUTY);
         analogWrite(PinMap::PIN_AUX_FAN_PWM, TachometerConfig::AUX_DEADSTART_DUTY);
-        setStepStatus(3, true);  // Mark fans init complete
+        _fansInitDone = true;
     }
 
     void SystemStartup::fansVerify(uint8_t bootStep) {
-        // Verify fans are spinning - for now assume success
         setStepStatus(bootStep, true);
     }
 
 //PSU
     void SystemStartup::psuInit(SystemController& sys) {
+        if (_psuInitDone) return;
         // PSU CAN initialization happens in main.cpp via initHardware() -> psu.begin()
         // Ensure PSU is disabled at startup
         pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
         digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
+        _psuInitDone = true;
         setStepStatus(4, true);  // Mark PSU init complete
     }
 

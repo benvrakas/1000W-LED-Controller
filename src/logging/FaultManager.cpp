@@ -8,6 +8,8 @@ extern ThermistorManager ledThermistor;
 extern ThermistorManager pumpThermistor;
 extern TachometerManager pump;
 extern TachometerManager mainFan;
+extern TachometerManager psuFan;
+extern TachometerManager auxFan;
 extern CanBusManager psu;
 
 FaultManager &FaultManager::instance() {
@@ -77,6 +79,18 @@ void FaultManager::update(SystemController &sys, unsigned long now) {
     }
 
     if (mainFan.getStallStatus()) {
+        raiseFault(FaultCode::COOLING_FAILURE);
+        sys.transitionTo(SystemState::ERROR_KILL);
+        return;
+    }
+
+    if (psuFan.getStallStatus()) {
+        raiseFault(FaultCode::COOLING_FAILURE);
+        sys.transitionTo(SystemState::ERROR_KILL);
+        return;
+    }
+
+    if (auxFan.getStallStatus()) {
         raiseFault(FaultCode::COOLING_FAILURE);
         sys.transitionTo(SystemState::ERROR_KILL);
         return;

@@ -38,6 +38,10 @@ private:
     bool _encoderReady;
     bool _thermistorsReady;
 
+    bool _pumpInitDone;
+    bool _fansInitDone;
+    bool _psuInitDone;
+
     //Helper to verify pin 
     bool isPinSetAsOutput(uint8_t pin) const;
     bool isPinSetAsInput(uint8_t pin) const;

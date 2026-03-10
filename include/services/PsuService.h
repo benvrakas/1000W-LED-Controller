@@ -63,6 +63,7 @@ private:
     uint32_t _lastUpdateMs;        // last update time for slew calculations
     float    _slewRatePctPerSec;   // active slew rate (percent per second)
     bool     _isOn;                // true when PSU is enabled
+    unsigned long _shutdownStartTimeMs; // tracks when shutdown started for hard timeout
 
     // Configuration
     static constexpr float MAX_LED_CURRENT_A = 22.0f; // COB nominal

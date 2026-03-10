@@ -21,7 +21,8 @@ enum class FaultCode : uint8_t {
 
     // UI / input faults
     ENCODER_FAULT,
-    BUTTON_STUCK,
+    // System faults
+    INIT_FAILED,        // Boot sequence timeout or failure
 };
 
 // FaultManager

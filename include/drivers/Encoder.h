@@ -28,7 +28,9 @@ public:
     void    setCounts(int16_t value);
 
     static constexpr int16_t COUNTS_PER_REV   = 600;
-    static constexpr int16_t MAX_COUNTS_RANGE = 2 * COUNTS_PER_REV; // 0..1200
+    static constexpr float   REVS_FOR_MAX_BRIGHTNESS = 2.0f; // Adjustable constant for revolutions mapped to 0-1 brightness
+    static constexpr int16_t MAX_COUNTS_RANGE = static_cast<int16_t>(REVS_FOR_MAX_BRIGHTNESS * COUNTS_PER_REV); // e.g. 1200
+
 
 private:
     volatile int16_t _counts;

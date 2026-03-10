@@ -11,18 +11,12 @@ InputService::InputService(EncoderManager& encoder, PowerButtonManager& powerBut
       _knobFraction(0.0f) {}
 
 void InputService::begin() {
-    // Seed state from current button status and encoder position.
+    // Seed state from current button status
     _armed     = _powerButton.isArmed();
     _prevArmed = _armed;
 
-    int16_t counts = _encoder.getCounts();
-    if (counts < 0) counts = 0;
-    if (counts > EncoderManager::MAX_COUNTS_RANGE) {
-        counts = EncoderManager::MAX_COUNTS_RANGE;
-    }
-
-    _knobFraction = static_cast<float>(counts) /
-                    static_cast<float>(EncoderManager::MAX_COUNTS_RANGE);
+    // Reset encoder/knob to 0 at initialization
+    forceKnobToZero();
 
     _edgeArmedOn  = false;
     _edgeArmedOff = false;

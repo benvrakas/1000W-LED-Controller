@@ -22,6 +22,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
     //Switch statement where we go through all init steps and verify they are safe
     switch (data.bootStep) {
         case 1: //Board pins init
+            sys.context.oled.showStatus("BOOT", "CHECK: PINS");
             startup.boardPinsInit(sys);
             startup.boardPinsVerify(data.bootStep);
 
@@ -33,6 +34,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
         
         case 2: //Pump init
+            sys.context.oled.showStatus("BOOT", "CHECK: PUMP");
             startup.pumpInit(sys);
             startup.pumpVerify(data.bootStep);
 
@@ -43,6 +45,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
 
         case 3: //Fans init
+            sys.context.oled.showStatus("BOOT", "CHECK: FANS");
             startup.fansInit(sys);
             startup.fansVerify(data.bootStep);
 
@@ -53,6 +56,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
 
         case 4: //PSU init
+            sys.context.oled.showStatus("BOOT", "CHECK: PSU");
             startup.psuInit(sys);
 
             if(startup.getStepStatus(data.bootStep)) {
@@ -62,6 +66,7 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
             break;
 
         case 5: //Display init
+            sys.context.oled.showStatus("BOOT", "CHECK: UI");
             startup.displayInit(sys);
 
             if(startup.getStepStatus(data.bootStep)) {
@@ -79,6 +84,8 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
 
         default: //Illegal boot step or error got flagged, assume error
             FaultManager::instance().raiseFault(FaultCode::INIT_FAILED);
+            sys.context.neoPixel.setBlinkColor(0x0000FF); // Blue for init fail
+            sys.context.neoPixel.activateErrorCode(data.bootStep); // Use bootStep as error code
             ErrorLogger::instance().begin();
             {
                 SystemViewModel vm = {};
@@ -91,6 +98,8 @@ void handleInitState(SystemController &sys, unsigned long currentMillis) {
     //Local Logic Watchdog
     if (currentMillis - data.lastStepTime > 500) {
         FaultManager::instance().raiseFault(FaultCode::INIT_FAILED);
+        sys.context.neoPixel.setBlinkColor(0x0000FF); // Blue for init fail
+        sys.context.neoPixel.activateErrorCode(data.bootStep); // Use bootStep as error code
         ErrorLogger::instance().begin();
         {
             SystemViewModel vm = {};

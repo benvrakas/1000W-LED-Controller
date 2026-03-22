@@ -40,6 +40,10 @@ namespace PinMap {
     // ---PSU CONTROL LINES---
     static constexpr uint8_t PIN_PSU_REMOTE = A4;    // A4 (PA04): Remote On/Off
 
+    // ---Status NeoPixel---
+    // Renamed to avoid collision with board macros like PIN_NEOPIXEL or NEOPIXEL
+    static constexpr uint8_t PIN_STATUS_LED = 8; 
+
     // ---EIC Channels---
     // Mapped based on SAMD51 Datasheet/Variant for Feather M4 CAN Express
     // Note: Verify variant.cpp for exact EIC mappings on your board version

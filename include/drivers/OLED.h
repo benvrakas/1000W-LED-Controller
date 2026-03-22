@@ -23,6 +23,7 @@ public:
     void begin(TwoWire* i2cBus = &Wire);
     void showBootScreen(const char* version);
     void updateTelemetry(float voltage, float current, float temp);
+    void showStatus(const char* title, const char* msg);
     void showError(const char* msg);
 
     // Expose underlying display for higher-level UI controllers. Callers

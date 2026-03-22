@@ -9,6 +9,7 @@
 #include "drivers/Encoder.h"
 #include <Wire.h>
 #include <Adafruit_SPIFlash.h>
+#include "drivers/NeoPixel.h"
 
 // Global Hardware Instances
 // (Extern declarations are also in their respective driver headers, 
@@ -23,6 +24,8 @@ extern ThermistorManager pumpThermistor;
 extern CanBusManager psu;
 extern NativeCanBackend canBackend;
 extern OledManager oled;
+extern NeoPixelManager neoPixel;
+
 
 // QSPI Flash
 extern Adafruit_FlashTransport_QSPI flashTransport;

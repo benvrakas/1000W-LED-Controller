@@ -14,6 +14,30 @@ extern CanBusManager psu;
 void handleErrorKillState(SystemController &sys, unsigned long now) {
     (void)now;
 
+    // 0) Activate the NeoPixel error code for the current fault
+    FaultCode currentFault = FaultManager::instance().getActiveFault();
+    if (currentFault != FaultCode::NONE) {
+        if (currentFault == FaultCode::INIT_FAILED) {
+            sys.context.neoPixel.setBlinkColor(0x0000FF); // Blue for init fail
+            sys.context.neoPixel.activateErrorCode(sys.initData.bootStep);
+        } else {
+            sys.context.neoPixel.activateErrorCode((uint8_t)currentFault);
+        }
+    }
+
+    // Update OLED error message
+    char errorMsg[32];
+    switch (currentFault) {
+        case FaultCode::CAN_TIMEOUT:     strcpy(errorMsg, "CAN TIMEOUT"); break;
+        case FaultCode::PSU_FAULT:       strcpy(errorMsg, "PSU FAULT"); break;
+        case FaultCode::OVER_TEMP_LED:   strcpy(errorMsg, "LED OVERTEMP"); break;
+        case FaultCode::OVER_TEMP_WATER: strcpy(errorMsg, "WATER OVERTEMP"); break;
+        case FaultCode::COOLING_FAILURE: strcpy(errorMsg, "COOLING FAIL"); break;
+        case FaultCode::INIT_FAILED:     sprintf(errorMsg, "INIT FAIL S:%d", sys.initData.bootStep); break;
+        default:                         strcpy(errorMsg, "SYSTEM FAULT"); break;
+    }
+    sys.context.oled.showError(errorMsg);
+
     // 1) Ensure PSU output is disabled over CAN
     psu.setOperation(false);
 

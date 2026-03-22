@@ -14,7 +14,8 @@ AppContext context = {
     encoder,        // EncoderManager& encoder
     powerButton,    // PowerButtonManager& powerButton
     psu,            // CanBusManager& psu
-    oled            // OledManager& oled
+    oled,           // OledManager& oled
+    neoPixel        // NeoPixelManager& neoPixel
 };
 
 // Initialize System Controller with dependency injection

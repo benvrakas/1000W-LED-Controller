@@ -6,6 +6,7 @@
 #include "drivers/OLED.h"
 #include "drivers/PowerButton.h"
 #include "drivers/Encoder.h"
+#include "drivers/NeoPixel.h"
 
 // AppContext
 // ----------
@@ -28,4 +29,5 @@ struct AppContext {
     // Actuators / Comms
     CanBusManager&     psu;
     OledManager&       oled;
+    NeoPixelManager&   neoPixel;
 };

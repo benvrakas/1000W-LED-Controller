@@ -24,6 +24,9 @@ void SystemController::begin() {
 // 2. The Main State Machine Loop
 // This function runs every cycle of the main loop()
 void SystemController::update() {
+    // Update non-blocking drivers
+    context.neoPixel.update();
+
     switch (currentState) {
         case SystemState::INIT:
             handleInitState(*this, millis()); // Pass this specific instance and global time to the handler
@@ -52,6 +55,19 @@ void SystemController::transitionTo(SystemState newState) {
 
     // Update the state
     currentState = newState;
+
+    // Update status LED
+    switch (newState) {
+        case SystemState::INIT:
+            context.neoPixel.setState(NeoPixelState::INIT);
+            break;
+        case SystemState::RUN:
+            context.neoPixel.setState(NeoPixelState::RUN);
+            break;
+        case SystemState::ERROR_KILL:
+            context.neoPixel.setState(NeoPixelState::ERROR);
+            break;
+    }
 
     // Initialize the data for the new state
     switch (newState) {

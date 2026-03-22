@@ -50,6 +50,18 @@
          _display->display();
      }
 
+     void OledManager::showStatus(const char* title, const char* msg) {
+         if (!_display) return;
+         _display->clearDisplay();
+         _display->setTextSize(2);
+         _display->setTextColor(SSD1306_WHITE);
+         _display->setCursor(0, 0);
+         _display->println(title);
+         _display->setTextSize(1);
+         _display->println(msg);
+         _display->display();
+     }
+
      void OledManager::showError(const char* msg) {
          if (!_display) return;
          _display->clearDisplay();

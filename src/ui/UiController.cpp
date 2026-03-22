@@ -34,6 +34,8 @@ static void drawGauge(Adafruit_SSD1306* d,
 void UiController::update(const SystemViewModel& vm, unsigned long now) {
     (void)now;
 
+    if (!_oled.isReady()) return;
+
     Adafruit_SSD1306* d = _oled.getDisplay();
     if (!d) return;
 

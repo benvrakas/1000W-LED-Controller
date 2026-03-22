@@ -22,7 +22,7 @@ AppContext context = {
 SystemController sys(context);
 
 void setup() {
-    Watchdog.enable(1000); // 1s watchdog
+    Watchdog.enable(4000); // Increased to 4s to allow for Flash/OLED operations
     Serial.begin(115200);
 
     // Initialize bus-level hardware (I2C, SPI, CAN backend)

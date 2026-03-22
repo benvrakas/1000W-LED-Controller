@@ -23,6 +23,9 @@ public:
     // state (normal vs error) and telemetry.
     void update(const SystemViewModel& vm, unsigned long now);
 
+    // Expose display for direct access if needed (check isReady first)
+    Adafruit_SSD1306* getDisplay() { return _oled.getDisplay(); }
+
 private:
     OledManager& _oled;
 };

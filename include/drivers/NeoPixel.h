@@ -1,9 +1,6 @@
 #pragma once
 
 #include <Adafruit_NeoPixel.h>
-#include <map>
-#include <string>
-#include <vector>
 
 // Enum for system states to control NeoPixel color
 enum class NeoPixelState {
@@ -31,8 +28,8 @@ public:
     // Update method to be called in the main loop for blinking animations
     void update();
 
-    // Register an error code with its binary pattern
-    void registerErrorCode(uint8_t code, const std::string& pattern);
+    // Register an error code with its binary pattern (Short/Long pulses)
+    void registerErrorCode(uint8_t code, const char* pattern);
 
     // Activate an error code for display
     void activateErrorCode(uint8_t code);
@@ -56,22 +53,31 @@ private:
     // Blinking parameters
     unsigned long _previousMillis;
     bool _ledOn;
+    uint32_t _blinkColor;
 
-    // Error blinking specific variables
-    std::map<uint8_t, std::string> _errorPatterns;
-    std::vector<uint8_t> _activeErrorCodes;
-    size_t _currentErrorIndex; // Index for _activeErrorCodes
-    int _currentPatternIndex;  // Index for current error's pattern string
-    unsigned long _blinkStartMillis; // Timestamp when current blink started
+    // Fixed storage to avoid heap fragmentation from map/vector in tight loops
+    static constexpr uint8_t MAX_PATTERNS = 20;
+    struct ErrorPattern {
+        uint8_t code;
+        const char* pattern;
+    } _patterns[MAX_PATTERNS];
+    uint8_t _patternCount;
 
-    static const unsigned long BLINK_SHORT_PULSE = 300;  // ms for '0'
-    static const unsigned long BLINK_LONG_PULSE = 600;   // ms for '1'
-    static const unsigned long BLINK_INTER_BIT_PAUSE = 150; // ms pause between bits
-    static const unsigned long BLINK_INTER_CODE_PAUSE = 1000; // ms pause between error codes
+    static constexpr uint8_t MAX_ACTIVE = 4;
+    uint8_t _activeCodes[MAX_ACTIVE];
+    uint8_t _activeCount;
 
-    // Helper to set pixel color and show
+    size_t _currentErrorIndex; 
+    int _currentPatternIndex;  
+    unsigned long _blinkStartMillis; 
+
+    static const unsigned long BLINK_SHORT_PULSE = 300;  
+    static const unsigned long BLINK_LONG_PULSE = 600;   
+    static const unsigned long BLINK_INTER_BIT_PAUSE = 150; 
+    static const unsigned long BLINK_INTER_CODE_PAUSE = 1000; 
+
+    // Helpers
     void _setPixelColor(uint32_t color);
     void _displayNextErrorBit();
-
-    uint32_t _blinkColor;
+    const char* _getPattern(uint8_t code);
 };

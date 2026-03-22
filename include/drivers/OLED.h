@@ -8,7 +8,7 @@
 namespace OLEDScreenConfig {
     // --- Connection Settings ---
     static constexpr uint8_t DEFAULT_ADDRESS = 0x3C;
-    static constexpr uint32_t BUS_SPEED      = 100000; // 400kHz standard, need same speed on same wire
+    static constexpr uint32_t BUS_SPEED      = 100000; 
 
     // --- Opperating Parameter Constraints ---
     static constexpr uint8_t SCREEN_WIDTH = 128;
@@ -26,8 +26,7 @@ public:
     void showStatus(const char* title, const char* msg);
     void showError(const char* msg);
 
-    // Expose underlying display for higher-level UI controllers. Callers
-    // must check for nullptr before use.
+    bool isReady() const { return _initialized; }
     Adafruit_SSD1306* getDisplay() const { return _display; }
 
 private:
@@ -36,7 +35,7 @@ private:
     uint8_t _height;
     TwoWire* _bus;
     Adafruit_SSD1306* _display; 
+    bool _initialized = false;
 };
 
-// Extern declaration so 'display' is available globally
 extern OledManager oled;

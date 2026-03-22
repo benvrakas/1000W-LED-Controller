@@ -58,18 +58,22 @@ NeoPixelManager neoPixel(PinMap::PIN_STATUS_LED, 1, NEO_GRB + NEO_KHZ800);
 // Hardware Initialization
 // ---------------------------------------------------------------------------
 void initHardware() {
+    Serial.println(F("HW: OLED init..."));
     // Initialize standard I2C for OLED
     Wire.begin();
     Wire.setClock(OLEDScreenConfig::BUS_SPEED);
     oled.begin(&Wire);
 
+    Serial.println(F("HW: CAN init..."));
     // Initialize SPI and CAN backend for PSU communication
     SPI.begin();
     psu.begin(&canBackend);
 
+    Serial.println(F("HW: Flash init..."));
     // Initialize QSPI Flash (raw access)
     flash.begin();
 
+    Serial.println(F("HW: NeoPixel init..."));
     // Initialize NeoPixel
     neoPixel.begin();
     
@@ -83,12 +87,12 @@ void initHardware() {
     neoPixel.registerErrorCode((uint8_t)FaultCode::ENCODER_FAULT,   "001");  // Short-Short-Long
     neoPixel.registerErrorCode((uint8_t)FaultCode::INIT_FAILED,     "1");    // Long
 
-    // Register Init Failure Codes (mapped to boot steps)
-    neoPixel.registerErrorCode(1, "0");    // Board Pins (Short)
-    neoPixel.registerErrorCode(2, "00");   // Pump (Short-Short)
-    neoPixel.registerErrorCode(3, "000");  // Fans (Short-Short-Short)
-    neoPixel.registerErrorCode(4, "1");    // PSU (Long)
-    neoPixel.registerErrorCode(5, "11");   // Display (Long-Long)
+    // Register Init Failure Codes (mapped to boot steps 1-5 -> 101-105)
+    neoPixel.registerErrorCode(101, "0");    // Board Pins (Short)
+    neoPixel.registerErrorCode(102, "00");   // Pump (Short-Short)
+    neoPixel.registerErrorCode(103, "000");  // Fans (Short-Short-Short)
+    neoPixel.registerErrorCode(104, "1");    // PSU (Long)
+    neoPixel.registerErrorCode(105, "11");   // Display (Long-Long)
 
     neoPixel.setState(NeoPixelState::INIT);
 }

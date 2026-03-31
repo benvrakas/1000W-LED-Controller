@@ -79,8 +79,10 @@ void TachometerManager::calculateRPM(unsigned long currentMillis) {
 
     if (duration >= TachometerConfig::RPM_COMPUTE_INTERVAL) {
         // Atomically read and clear pulse count
+        noInterrupts();
         uint32_t capturedPulses = _pulseCount;
         _pulseCount = 0;
+        interrupts();
 
         // RPM = (pulses per period) * (60000 ms/min) / (period in ms) / 2 (pulses per rev)
         // Simplified: RPM = capturedPulses * 30000 / duration

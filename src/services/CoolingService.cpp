@@ -16,65 +16,73 @@ CoolingService::CoolingService(TachometerManager& mainFan, TachometerManager& ps
 {}
 
 void CoolingService::begin() {
-    // Ensure PWM writes use 8-bit resolution for all fan/pump channels.
     analogWriteResolution(8);
-    
     _lastUpdateMs = millis();
     _ledIntegral = 0.0f;
     _waterIntegral = 0.0f;
 }
 
 void CoolingService::update(unsigned long now) {
+    // 0) Update sensors
+    _ledThermistor.updateTemp();
+    _pumpThermistor.updateTemp();
+
     // 1) Update tachometer RPM calculations
     _mainFan.update(now);
     _auxFan.update(now);
     _psuFan.update(now);
     _pump.update(now);
 
-    // 2) Read current temperatures from thermistor managers
+    // 2) Read current temperatures
     float ledTempC   = _ledThermistor.getCelsius();
     float waterTempC = _pumpThermistor.getCelsius();
 
-    // Store in internal state for external access via getState()
     _state.ledTempC   = ledTempC;
     _state.waterTempC = waterTempC;
 
-    // Time delta for integral calculation
     float dt = (now - _lastUpdateMs) / 1000.0f;
-    if (dt <= 0.0f || dt > 1.0f) dt = 0.1f; // Prevent huge leaps on delays or first cycle
+    if (dt <= 0.0f || dt > 1.0f) dt = 0.1f;
     _lastUpdateMs = now;
 
-    // 3) PI Controller for LED Cooling (Radiator Fans, PSU Fan, Aux Fan)
+    // 3) PI Controller for LED Cooling
     float ledError = ledTempC - FanCurveConfig::TARGET_TEMP_LED;
     
-    // Only accumulate integral when error is positive (we only cool, we don't heat)
-    // Or allow negative error to decrease integral back to 0
     if (ledError > 0 || _ledIntegral > 0) {
         _ledIntegral += ledError * dt;
     }
     
-    // Clamp integral to prevent windup
     if (_ledIntegral > FanCurveConfig::LED_INTEGRAL_MAX) _ledIntegral = FanCurveConfig::LED_INTEGRAL_MAX;
     if (_ledIntegral < 0.0f) _ledIntegral = 0.0f;
 
     float ledPI_Output = (FanCurveConfig::LED_KP * ledError) + (FanCurveConfig::LED_KI * _ledIntegral);
     
-    // Calculate final duties based on minimums + PI output
-    float mainFanFloat = FanCurveConfig::MAIN_DUTY_MIN + ledPI_Output;
+    float mainFanFloat = 0;
+    if (ledError > 0 || _ledIntegral > 0) {
+        mainFanFloat = FanCurveConfig::MAIN_DUTY_MIN + ledPI_Output;
+    }
     if (mainFanFloat > FanCurveConfig::MAIN_DUTY_MAX) mainFanFloat = FanCurveConfig::MAIN_DUTY_MAX;
-    if (mainFanFloat < FanCurveConfig::MAIN_DUTY_MIN) mainFanFloat = FanCurveConfig::MAIN_DUTY_MIN;
+    if (mainFanFloat < 0) mainFanFloat = 0;
     
-    float auxFanFloat = FanCurveConfig::AUX_DUTY_MIN + ledPI_Output;
+    float auxFanFloat = 0;
+    if (ledError > 0 || _ledIntegral > 0) {
+        auxFanFloat = FanCurveConfig::AUX_DUTY_MIN + ledPI_Output;
+    }
     if (auxFanFloat > FanCurveConfig::AUX_DUTY_MAX) auxFanFloat = FanCurveConfig::AUX_DUTY_MAX;
-    if (auxFanFloat < FanCurveConfig::AUX_DUTY_MIN) auxFanFloat = FanCurveConfig::AUX_DUTY_MIN;
+    if (auxFanFloat < 0) auxFanFloat = 0;
 
     uint8_t mainFanDuty = static_cast<uint8_t>(mainFanFloat);
     uint8_t auxDuty = static_cast<uint8_t>(auxFanFloat);
     
-    _mainFan.setDuty(mainFanDuty);
-    _psuFan.setDuty(mainFanDuty); // PSU fan follows main fan
-    _auxFan.setDuty(auxDuty);
-
+    // Safety check: only run fans if reading is valid (>0 and <100)
+    if (ledTempC > 1.0f && ledTempC < 100.0f) {
+        _mainFan.setDuty(mainFanDuty);
+        _psuFan.setDuty(mainFanDuty);
+        _auxFan.setDuty(auxDuty);
+    } else {
+        _mainFan.setDuty(0);
+        _psuFan.setDuty(0);
+        _auxFan.setDuty(0);
+    }
 
     // 4) PI Controller for Water Cooling (Pump)
     float waterError = waterTempC - FanCurveConfig::TARGET_TEMP_WATER;
@@ -88,14 +96,22 @@ void CoolingService::update(unsigned long now) {
 
     float waterPI_Output = (FanCurveConfig::WATER_KP * waterError) + (FanCurveConfig::WATER_KI * _waterIntegral);
     
-    float pumpFloat = FanCurveConfig::PUMP_DUTY_MIN + waterPI_Output;
+    float pumpFloat = 0;
+    if (waterError > 0 || _waterIntegral > 0) {
+        pumpFloat = FanCurveConfig::PUMP_DUTY_MIN + waterPI_Output;
+    }
     if (pumpFloat > FanCurveConfig::PUMP_DUTY_MAX) pumpFloat = FanCurveConfig::PUMP_DUTY_MAX;
-    if (pumpFloat < FanCurveConfig::PUMP_DUTY_MIN) pumpFloat = FanCurveConfig::PUMP_DUTY_MIN;
+    if (pumpFloat < 0) pumpFloat = 0;
 
     uint8_t pumpDuty = static_cast<uint8_t>(pumpFloat);
-    _pump.setDuty(pumpDuty);
+    
+    if (waterTempC > 1.0f && waterTempC < 100.0f) {
+        _pump.setDuty(pumpDuty);
+    } else {
+        _pump.setDuty(0);
+    }
 
-    // 5) Read RPM values from tachometer managers
+    // 5) Read RPM values
     _state.mainFanRPM = _mainFan.getRPM();
     _state.auxFanRPM  = _auxFan.getRPM();
     _state.psuFanRPM  = _psuFan.getRPM();

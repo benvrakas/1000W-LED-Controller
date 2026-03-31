@@ -18,11 +18,11 @@ FaultManager &FaultManager::instance() {
 }
 
 FaultManager::FaultManager()
-    : _activeFault(FaultCode::NONE) {}
+    : _activeFault(FaultCode::NONE), 
+      _ledOvertempStartMs(0), 
+      _waterOvertempStartMs(0) {}
 
 void FaultManager::raiseFault(FaultCode code) {
-    // For now, track a single active fault. This can be expanded to a
-    // bitmask or list if multiple simultaneous faults are required.
     _activeFault = code;
 }
 
@@ -41,31 +41,43 @@ FaultCode FaultManager::getActiveFault() const {
 }
 
 void FaultManager::update(SystemController &sys, unsigned long now) {
-    (void)now;
-
     // Skip fault checking if already in ERROR_KILL state
     if (sys.currentState == SystemState::ERROR_KILL) {
         return;
     }
 
-    // 1. Check for overtemperature conditions
+    // 1. Check for overtemperature conditions with temporal filtering (EMF protection)
     float ledTemp = ledThermistor.getCelsius();
     float waterTemp = pumpThermistor.getCelsius();
 
+    // LED Overtemp Debounce - Must persist for 3 seconds to trigger
     if (ledTemp > ThermistorConfig::MAX_TEMP_LED) {
-        raiseFault(FaultCode::OVER_TEMP_LED);
-        sys.transitionTo(SystemState::ERROR_KILL);
-        return;
+        if (_ledOvertempStartMs == 0) _ledOvertempStartMs = now;
+        if (now - _ledOvertempStartMs >= 3000UL) {
+            raiseFault(FaultCode::OVER_TEMP_LED);
+            sys.transitionTo(SystemState::ERROR_KILL);
+            return;
+        }
+    } else {
+        _ledOvertempStartMs = 0;
     }
 
+    // Water Overtemp Debounce - Must persist for 3 seconds
     if (waterTemp > ThermistorConfig::MAX_TEMP_PUMP) {
-        raiseFault(FaultCode::OVER_TEMP_WATER);
-        sys.transitionTo(SystemState::ERROR_KILL);
-        return;
+        if (_waterOvertempStartMs == 0) _waterOvertempStartMs = now;
+        if (now - _waterOvertempStartMs >= 3000UL) {
+            raiseFault(FaultCode::OVER_TEMP_WATER);
+            sys.transitionTo(SystemState::ERROR_KILL);
+            return;
+        }
+    } else {
+        _waterOvertempStartMs = 0;
     }
 
     // 2. Check for PSU CAN communication timeout
-    if (psu.hasFault()) {
+    // Trigger if we've seen telemetry before and it stopped.
+    // This allows booting on USB without a PSU connected.
+    if (psu.hasFault() && psu.telemetryValid()) {
         raiseFault(FaultCode::CAN_TIMEOUT);
         sys.transitionTo(SystemState::ERROR_KILL);
         return;
@@ -95,8 +107,5 @@ void FaultManager::update(SystemController &sys, unsigned long now) {
         sys.transitionTo(SystemState::ERROR_KILL);
         return;
     }
-
-    // If we reach here and had a fault before, clear it
-    // (This allows recovery from transient faults if needed)
 }
 

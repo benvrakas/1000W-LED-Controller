@@ -49,5 +49,10 @@ class FaultManager {
     FaultManager();
 
     FaultCode _activeFault;
+
+    // Temporal filtering for noisy sensors
+    unsigned long _ledOvertempStartMs;
+    unsigned long _waterOvertempStartMs;
+    static constexpr unsigned long THERMAL_FAULT_DEBOUNCE_MS = 1000; // Must persist for 1s
 };
 

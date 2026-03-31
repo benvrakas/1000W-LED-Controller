@@ -12,7 +12,6 @@ This system manages the power and cooling of a high-power COB LED array. It ensu
 *   **Safety**:
     *   Latched `ERROR_KILL` state for critical faults (Over-temp, Pump failure, CAN timeout).
     *   Hardware enable lines dropped immediately on fault.
-    *   **QSPI Error Logging**: Crashes and faults (along with full system telemetry snapshots) are saved to onboard flash (`error_log.csv`) via a FAT filesystem for post-mortem analysis.
 
 ## 2. Hardware Components
 The system manages the following specific high-performance components:
@@ -24,9 +23,8 @@ The system manages the following specific high-performance components:
     *   **Radiator Fans:** High static pressure 120mm PWM fans (e.g., NMB Technologies 12038VA series) to force air through the liquid cooling radiator.
     *   **Auxiliary/Lens Fans:** Additional PWM fans (e.g., Delta FFB series) to cool the optical path and projector lenses.
 *   **Sensors:** Two 10k NTC Thermistors (Beta: 3950) for monitoring both the LED block temperature and the circulating Water temperature.
-*   **Storage:** 2MB QSPI Flash (GD25Q16).
 
-For a complete pinout mapping, refer to [docs/Pinout.md](docs/Pinout.md).
+### 2.1 Pinout Mapping
 
 ## 3. Core Architectural Pattern
 The software is structured using a **Dependency Injection (DI)** pattern, implemented in C++ with the Arduino/PlatformIO framework. This cleanly separates the hardware driver layer from the higher-level business logic.
@@ -100,7 +98,6 @@ Due to the extreme thermal output of a 1000W LED, safety is paramount. The syste
 **When `ERROR_KILL` is triggered:**
 1.  **Immediate Disconnect:** The `psu.setOperation(false)` command is fired, which drops the `PSU_REMOTE` gate to `LOW` (hardware disable) and sends a CAN disable command.
 2.  **Latch:** The system halts all normal operations. It will not restart or accept input until physically unplugged and reset.
-3.  **Crash Logging:** A final `SystemViewModel` telemetry snapshot is explicitly logged to flash.
 
 ## 6. Directory Structure
 *   `src/` - Implementation files.

@@ -1,7 +1,6 @@
 #include "state/StateErrorKill.h"
 #include "config/PinMap.h"
 #include "drivers/CanBus.h"
-#include "logging/ErrorLogger.h"
 #include "logging/FaultManager.h"
 #include "core/Hardware.h"
 #include <Adafruit_SleepyDog.h>
@@ -11,6 +10,12 @@ extern CanBusManager psu;
 
 void handleErrorKillState(SystemController &sys, unsigned long now) {
     Watchdog.reset();
+
+    // 0) Keep sensors updating so we can see why we crashed
+    sys.context.ledThermistor.updateTemp();
+    sys.context.pumpThermistor.updateTemp();
+    sys.globalLedTemp = sys.context.ledThermistor.getCelsius();
+    sys.globalPumpTemp = sys.context.pumpThermistor.getCelsius();
 
     static unsigned long lastReportTime = 0;
     const unsigned long reportInterval = 500; 
@@ -23,7 +28,7 @@ void handleErrorKillState(SystemController &sys, unsigned long now) {
         Serial.println(F(") ---"));
     }
 
-    // 0) NeoPixel
+    // 1) NeoPixel
     FaultCode currentFault = FaultManager::instance().getActiveFault();
     if (currentFault != FaultCode::NONE) {
         if (currentFault == FaultCode::INIT_FAILED) {
@@ -34,12 +39,12 @@ void handleErrorKillState(SystemController &sys, unsigned long now) {
         }
     }
 
-    // 1) PSU Hardware Kill
+    // 2) PSU Hardware Kill
     psu.setOperation(false);
     pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
     digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
 
-    // 2) UI & Logging
+    // 3) UI Reporting
     if (shouldReport) {
         char errorMsg[32];
         switch (currentFault) {
@@ -52,25 +57,33 @@ void handleErrorKillState(SystemController &sys, unsigned long now) {
             default:                         strncpy(errorMsg, "SYSTEM FAULT", 31); break;
         }
         
+        Serial.print(F("FAULT ACTIVE: ")); Serial.println(errorMsg);
+        Serial.print(F("  LED: ")); Serial.print(sys.globalLedTemp, 1);
+        Serial.print(F("C (ADC: ")); Serial.print(sys.context.ledThermistor.getRawADC());
+        Serial.print(F(")  Water: ")); Serial.print(sys.globalPumpTemp, 1);
+        Serial.print(F("C (ADC: ")); Serial.print(sys.context.pumpThermistor.getRawADC());
+        Serial.println(F(")"));
+
         if (sys.context.oled.isReady()) {
-            sys.context.oled.showError(errorMsg);
+            Adafruit_SH1107* d = sys.context.oled.getDisplay();
+            d->clearDisplay();
+            d->setTextColor(SH110X_WHITE);
+            
+            d->setTextSize(2);
+            d->setCursor(0, 0);
+            d->println(F("ERROR!"));
+            
+            d->setTextSize(1);
+            d->setCursor(0, 20);
+            d->println(errorMsg);
+            
+            d->setCursor(0, 35);
+            d->print(F("LED: ")); d->print(sys.globalLedTemp, 1); d->println(F(" C"));
+            d->print(F("WTR: ")); d->print(sys.globalPumpTemp, 1); d->println(F(" C"));
+            
+            d->display();
         }
 
-        SystemViewModel vm = {};
-        vm.psuVoltage       = sys.psu.getVoltage();
-        vm.psuCurrent       = sys.psu.getCurrent();
-        vm.psuPower         = sys.psu.getPower();
-        vm.ledTempC         = sys.globalLedTemp;
-        vm.waterTempC       = sys.globalPumpTemp;
-        vm.mainFanRPM       = sys.globalMainFansRPM;
-        vm.auxFanRPM        = sys.globalAuxFanRPM;
-        vm.psuFanRPM        = sys.globalPSUFanRPM;
-        vm.pumpRPM          = sys.globalPumpRPM;
-        vm.knobFraction     = sys.input.getKnobFraction();
-        vm.appliedFraction  = sys.psu.getAppliedCurrentFraction();
-        vm.isArmed          = sys.input.isArmed();
-        
-        ErrorLogger::instance().update(sys, vm, now);
         Watchdog.reset();
     }
 }

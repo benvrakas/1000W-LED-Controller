@@ -13,8 +13,17 @@ namespace ThermistorConfig {
     static constexpr float BETA_VALUE_LED = 3950.0f;
     static constexpr float BETA_VALUE_PUMP = 3950.0f;
 
-    static constexpr uint32_t SERIES_RESISTOR_LED = 10000UL; // 10k Ohm
-    static constexpr uint32_t SERIES_RESISTOR_PUMP = 10000UL; // 12-bit ADC
+    static constexpr float NOMINAL_RESISTANCE_LED = 10000.0f; // 10K NTC
+    static constexpr float NOMINAL_RESISTANCE_PUMP = 10000.0f; // 10K NTC
+
+    static constexpr uint32_t SERIES_RESISTOR_LED = 10000UL; // 10K Fixed
+    static constexpr uint32_t SERIES_RESISTOR_PUMP = 10000UL; // 10K Fixed
+
+    // Hardware Orientation:
+    // true  = 3.3V -- [Thermistor] -- PIN -- [Resistor] -- GND
+    // false = 3.3V -- [Resistor] -- PIN -- [Thermistor] -- GND
+    static constexpr bool IS_HIGH_SIDE_LED = false; 
+    static constexpr bool IS_HIGH_SIDE_PUMP = false;
 }
 
 namespace TachometerConfig {

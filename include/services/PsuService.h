@@ -42,6 +42,7 @@ public:
     float getVoltage() const;
     float getCurrent() const;
     float getPower() const;
+    bool  telemetryValid() const;
 
     // Slew configuration: standard operation vs shutdown. These values are
     // in percent-per-second and are passed into the internal slew function.

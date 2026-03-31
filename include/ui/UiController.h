@@ -1,14 +1,13 @@
 #pragma once
 
 #include "core/SystemViewModel.h"
+#include "drivers/OLED.h"  // Includes Adafruit_SH110X
 
 // UiController
 // ------------
 // Mediates between the system state/telemetry and the OLED driver. This
 // controller owns what is drawn on screen: PSU stats, circular LED power
 // gauge, virtual encoder position, and error banners/screens.
-
-class OledManager;
 
 class UiController {
 public:
@@ -24,7 +23,7 @@ public:
     void update(const SystemViewModel& vm, unsigned long now);
 
     // Expose display for direct access if needed (check isReady first)
-    Adafruit_SSD1306* getDisplay() { return _oled.getDisplay(); }
+    Adafruit_SH1107* getDisplay() { return _oled.getDisplay(); }
 
 private:
     OledManager& _oled;

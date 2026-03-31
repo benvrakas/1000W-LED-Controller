@@ -8,19 +8,26 @@
 
 namespace CanBusConfig {
     // --- Bus Settings ---
-    static constexpr uint32_t BITRATE             = 500000UL;   // 500 kbps
+    static constexpr uint32_t BITRATE             = 250000UL;   // 250 kbps (Mean Well Default)
 
     // --- Mean Well UHP-1500-48 CAN Protocol (PMBUS over CAN) ---
-    // Base address is configurable via DIP switches; default = 0x00
-    // CAN IDs use 29-bit extended format: 0x000C03XX where XX = unit address
-    static constexpr uint8_t  PSU_ADDRESS         = 0x40;       // Default PSU address
+    // Base address is 0x00 for units without DIP switches
+    static constexpr uint8_t  PSU_ADDRESS         = 0x00;
     
-    // Command IDs (add to base 0x000C0300 + address)
-    static constexpr uint32_t ID_OPERATION        = 0x000C0340; // On/Off command
-    static constexpr uint32_t ID_SET_CURRENT      = 0x000C0341; // Set current (IOUT_OC_WARN_LIMIT)
-    static constexpr uint32_t ID_SET_VOLTAGE      = 0x000C0342; // Set voltage (VOUT_COMMAND)
-    static constexpr uint32_t ID_TELEMETRY_REQ    = 0x000C0343; // Request telemetry
-    static constexpr uint32_t ID_TELEMETRY_RESP   = 0x000C0380; // Telemetry response (broadcast)
+    // Command IDs
+    // Master -> PSU (Write): 0x000C0300 + Address
+    // PSU -> Master (Read):  0x000C0380 + Address (for telemetry)
+    static constexpr uint32_t ID_PSU_WRITE        = 0x000C0300 + PSU_ADDRESS;
+    static constexpr uint32_t ID_PSU_READ         = 0x000C0380 + PSU_ADDRESS;
+
+    // PMBus Command Codes used as Data[0] in CAN frames
+    static constexpr uint8_t CMD_OPERATION        = 0x01;
+    static constexpr uint8_t CMD_VOUT_COMMAND     = 0x21;
+    static constexpr uint8_t CMD_IOUT_SET         = 0x46; // IOUT_SET or IOUT_OC_FAULT_LIMIT
+    static constexpr uint8_t CMD_READ_VOUT        = 0x8B;
+    static constexpr uint8_t CMD_READ_IOUT        = 0x8C;
+    static constexpr uint8_t CMD_READ_TEMP        = 0x8D;
+    static constexpr uint8_t CMD_STATUS_WORD      = 0x79;
 
     // --- UHP-1500-48 Specifications ---
     static constexpr float MAX_VOLTAGE_V          = 55.2f;      // Max output voltage
@@ -29,7 +36,7 @@ namespace CanBusConfig {
     static constexpr float MAX_POWER_W            = 1500.0f;    // Max power
 
     // --- Watchdog ---
-    static constexpr uint32_t TELEMETRY_TIMEOUT_MS = 500UL;     // 500 ms
+    static constexpr uint32_t TELEMETRY_TIMEOUT_MS = 1000UL;    // Relaxed to 1s for better stability
     static constexpr uint32_t TELEMETRY_REQUEST_INTERVAL_MS = 100UL;  // Request every 100ms
 
     // --- Slew-Rate Limiter ---

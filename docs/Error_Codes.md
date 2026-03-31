@@ -28,13 +28,13 @@ The onboard NeoPixel on the Feather M4 CAN Express is used as a fallback status 
 ## Initialization Failure Codes (BLUE)
 If the system fails during the boot sequence, the NeoPixel will blink **BLUE**. The pattern corresponds to the failed boot step.
 
-| Step | Pattern | Visual Pattern | Boot Step Description |
-|------|---------|----------------|-----------------------|
-| 1 | `0` | Short | **Board Pins**: GPIO configuration or safety check failed. |
-| 2 | `00` | Short - Short | **Pump**: Pump initialization or priming failed. |
-| 3 | `000` | Short - Short - Short | **Fans**: Fan controller initialization failed. |
-| 4 | `1` | Long | **PSU**: CAN communication or PSU response timeout. |
-| 5 | `11` | Long - Long | **Display**: OLED initialization failed. |
+| Step | ID | Pattern | Visual Pattern | Boot Step Description |
+|------|----|---------|----------------|-----------------------|
+| 1 | 101 | `0` | Short | **Board Pins**: GPIO configuration or safety check failed. |
+| 2 | 102 | `00` | Short - Short | **Pump**: Pump initialization or priming failed. |
+| 3 | 103 | `000` | Short - Short - Short | **Fans**: Fan controller initialization failed. |
+| 4 | 104 | `1` | Long | **PSU**: CAN communication or PSU response timeout. |
+| 5 | 105 | `11` | Long - Long | **Display**: OLED initialization failed. |
 
 ---
 *Note: If multiple errors are active, the LED will cycle through all active patterns with an inter-code pause between them.*

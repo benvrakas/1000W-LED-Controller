@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"name": "Feathwing OLED test",
+			"path": "../Feathwing OLED test"
+		}
+	],
+	"settings": {}
+}

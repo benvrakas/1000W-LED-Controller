@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Adafruit_SSD1306.h>
+#include <Adafruit_SH110X.h>
 #include <Wire.h>
 #include "config/PinMap.h"
 
@@ -10,10 +10,9 @@ namespace OLEDScreenConfig {
     static constexpr uint8_t DEFAULT_ADDRESS = 0x3C;
     static constexpr uint32_t BUS_SPEED      = 100000; 
 
-    // --- Opperating Parameter Constraints ---
+    // --- SH1107 FeatherWing: 128x64 ---
     static constexpr uint8_t SCREEN_WIDTH = 128;
-    static constexpr uint8_t SCREEN_HEIGHT = 32;
-    static constexpr uint8_t OLED_RESET = -1;
+    static constexpr uint8_t SCREEN_HEIGHT = 64;
 }
 
 class OledManager {
@@ -27,14 +26,14 @@ public:
     void showError(const char* msg);
 
     bool isReady() const { return _initialized; }
-    Adafruit_SSD1306* getDisplay() const { return _display; }
+    Adafruit_SH1107* getDisplay() const { return _display; }
 
 private:
     uint8_t _address;
     uint8_t _width;
     uint8_t _height;
     TwoWire* _bus;
-    Adafruit_SSD1306* _display; 
+    Adafruit_SH1107* _display; 
     bool _initialized = false;
 };
 

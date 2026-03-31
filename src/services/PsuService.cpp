@@ -15,61 +15,42 @@ PsuService::PsuService(CanBusManager& psu)
       _shutdownStartTimeMs(0) {}
 
 void PsuService::begin() {
-    // Initialize timing baseline for slew calculations
     _lastUpdateMs = millis();
-
-    // Ensure we start from 0 current command
     _uiSetpointFrac     = 0.0f;
     _appliedCurrentFrac = 0.0f;
     _slewRatePctPerSec  = SLEW_RATE_NORMAL_PCT_PER_SEC;
     _isOn               = false;
     _shutdownStartTimeMs = 0;
 
-    // Ensure remote gate is in known OFF state
     pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
     digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
 }
 
+bool PsuService::telemetryValid() const {
+    return _psu.telemetryValid();
+}
+
 void PsuService::requestOn() {
     if (_isOn) return;
-    
     _isOn = true;
     _slewRatePctPerSec = SLEW_RATE_NORMAL_PCT_PER_SEC;
-    
-    // Enable CAN operation and remote gate
-    _psu.setOperation(true);
-    pinMode(PinMap::PIN_PSU_REMOTE, OUTPUT);
-    digitalWrite(PinMap::PIN_PSU_REMOTE, HIGH);
+    _shutdownStartTimeMs = millis(); // Reuse this variable as "StartupStartTime" for grace period
 }
 
 void PsuService::requestOff() {
     if (!_isOn) return;
-    
     _isOn = false;
     _slewRatePctPerSec = SLEW_RATE_SHUTDOWN_PCT_PER_SEC;
     _shutdownStartTimeMs = millis();
-    
-    // Note: actual CAN disable and remote gate LOW happens in update()
-    // once applied current reaches ~0, for safe shutdown sequencing.
 }
 
 float PsuService::applySlew(float currentFrac, float targetFrac, float dtSec) const {
-    if (dtSec <= 0.0f) {
-        return currentFrac;
-    }
-
-    // Convert percent-per-second rate to fraction-per-second
+    if (dtSec <= 0.0f) return currentFrac;
     float maxDeltaFracPerSec = _slewRatePctPerSec / 100.0f;
     float maxStep            = maxDeltaFracPerSec * dtSec;
-
     float error = targetFrac - currentFrac;
-
-    if (error > maxStep) {
-        error = maxStep;
-    } else if (error < -maxStep) {
-        error = -maxStep;
-    }
-
+    if (error > maxStep) error = maxStep;
+    else if (error < -maxStep) error = -maxStep;
     float next = currentFrac + error;
     if (next < 0.0f) next = 0.0f;
     if (next > 1.0f) next = 1.0f;
@@ -77,34 +58,43 @@ float PsuService::applySlew(float currentFrac, float targetFrac, float dtSec) co
 }
 
 void PsuService::update(unsigned long now) {
-    // _uiSetpointFrac is now set externally via setUiSetpointFraction()
-    // (typically from InputService before calling update).
-
-    // 1) Apply configurable slew on applied current fraction
     uint32_t dtMs = now - _lastUpdateMs;
     float    dtSec = static_cast<float>(dtMs) / 1000.0f;
 
     _appliedCurrentFrac = applySlew(_appliedCurrentFrac, _uiSetpointFrac, dtSec);
     _lastUpdateMs       = now;
 
-    // 2) Convert to current and issue CAN command
     float targetCurrentA = _appliedCurrentFrac * MAX_LED_CURRENT_A;
-
-    // Convert target Amps to percentage of PSU maximum capacity
-    // PSU Max = 31.3A, LED Max = 22.0A.
-    // We must scale the request so 100% LED power = ~70% PSU power.
     float levelPercent = (targetCurrentA / CanBusConfig::MAX_CURRENT_A) * 100.0f;
     
     if (levelPercent < 0.0f) levelPercent = 0.0f;
     if (levelPercent > 100.0f) levelPercent = 100.0f;
 
+    // 1. Set current parameters first
     _psu.requestPowerPercent(levelPercent);
 
-    // 3) Allow CAN manager to process telemetry and watchdog
+    // 2. Process CAN logic
     _psu.update(now);
 
-    // 4) If we're in shutdown mode and current has ramped down, disable PSU
-    if (!_isOn) {
+    // 3. Operational Logic & Safety
+    if (_isOn) {
+        // Safety: only raise physical enable pin if CAN is responding
+        // AND we don't have a sticky fault.
+        // GRACE PERIOD: Allow A4 to stay HIGH for 5 seconds during startup 
+        // even without telemetry to "wake up" the PSU CAN controller.
+        bool gracePeriod = (now - _shutdownStartTimeMs < 5000) && (_shutdownStartTimeMs != 0);
+        
+        if ((_psu.telemetryValid() || gracePeriod) && !_psu.hasFault()) {
+            _psu.setOperation(true); // Sends 0x80 (ON)
+            digitalWrite(PinMap::PIN_PSU_REMOTE, HIGH);
+        } else {
+            // EMERGENCY STOP: Kill PSU if comms drop during operation
+            // (Wait until communication is lost or a fault is detected)
+            digitalWrite(PinMap::PIN_PSU_REMOTE, LOW);
+            _psu.setOperation(false);
+        }
+    } else {
+        // Normal Shutdown sequence
         bool timeoutReached = (now - _shutdownStartTimeMs > 3000);
         if (_appliedCurrentFrac <= 0.01f || timeoutReached) {
             _psu.setOperation(false);
@@ -113,17 +103,9 @@ void PsuService::update(unsigned long now) {
     }
 }
 
-// Telemetry getters - delegate to CAN manager
-float PsuService::getVoltage() const {
-    return _psu.getTelemetry().voltage;
-}
-
-float PsuService::getCurrent() const {
-    return _psu.getTelemetry().current;
-}
-
-float PsuService::getPower() const {
+float PsuService::getVoltage() const { return _psu.getTelemetry().voltage; }
+float PsuService::getCurrent() const { return _psu.getTelemetry().current; }
+float PsuService::getPower() const { 
     CanTelemetry t = _psu.getTelemetry();
-    return t.voltage * t.current;
+    return t.voltage * t.current; 
 }
-

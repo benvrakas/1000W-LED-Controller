@@ -28,6 +28,8 @@ class PowerButtonManager {
         volatile unsigned long _pressDuration;
         volatile bool _buttonPressed; // true while physically held down
         volatile bool _armStatus;      // true = ON, false = OFF
+        bool _armToggleDone;           // prevents re-triggering while held
+        bool _wasPressed;              // edge detector for release logic
 
 };
 extern PowerButtonManager powerButton;

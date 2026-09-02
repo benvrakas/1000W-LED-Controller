@@ -30,5 +30,6 @@ struct SystemViewModel {
     // Input/control state
     float knobFraction;      // 0..1 user setpoint from encoder
     float appliedFraction;   // 0..1 actual LED power (slew-limited)
-    bool  isArmed;           // power button armed state
+    bool  isArmed;              // power button armed state
+    uint8_t ignoredChannelCount; // channels currently ignored via ERROR_KILL 3s hold (0 = normal)
 };

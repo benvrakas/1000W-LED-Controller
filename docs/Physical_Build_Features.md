@@ -3,7 +3,8 @@
 This document highlights the key physical and hardware features of the 1000W LED Controller project, based on an analysis of the assembled system. The build showcases a highly integrated blend of off-the-shelf industrial components, custom 3D-printed parts, and robust power delivery.
 
 ## 1. Chassis and Structural Framework
-* **Aluminum Extrusion:** The core frame is constructed from T-slot aluminum extrusion (likely 2020 profile). This provides a rigid, modular backbone for securely mounting the heavy power supply, optics, and cooling components.
+* **Aluminum Extrusion:** The core frame is constructed from 20mm x 20mm T-slot aluminum extrusion (2020 profile). This provides a rigid, modular backbone for securely mounting the heavy power supply, optics, and cooling components.
+* **Power Pack Frame:** The power pack enclosure frame measures 480mm x 340mm x 180mm.
 * **Custom 3D-Printed Brackets:** The extrusion framework is held together and augmented by custom 3D-printed corner brackets, handles, and mounting plates, ensuring precise alignment of the internal modules.
 * **Integrated Handle:** A sturdy, thick 3D-printed top handle is built into the frame, allowing for safe transport of the heavy unit.
 
@@ -18,7 +19,7 @@ This document highlights the key physical and hardware features of the 1000W LED
 ## 3. Thermal Management (Cooling System)
 Dissipating the heat from a 1000W LED requires an extreme cooling solution.
 * **Direct-Die Liquid Cooling:** A liquid cooling block is mounted directly underneath the LED die. High-temperature rated corrugated tubing routes the coolant to and from the block.
-* **High-Static Pressure Fans:** The side panel houses a bank of three large, high-RPM server-grade fans (matching the 12038VA/Delta datasheets).
+* **High-Static Pressure Fans:** The side panel houses a bank of three large, high-RPM server-grade fans on the radiator (Delta FFB1424VHG-EP, 140mm).
 * **Targeted Air Ducts:** Massive custom 3D-printed shrouds cover the internal electronics and heatsinks. These ducts ensure that the forced air from the server fans is channeled efficiently over critical heat-generating components (like internal finned heatsinks) rather than just blowing aimlessly through the chassis.
 * **Honeycomb Exhaust:** A separate 3D-printed honeycomb grill with an attached fan provides additional exhaust or targeted component cooling.
 

@@ -30,6 +30,7 @@ void NeoPixelManager::setState(NeoPixelState state) {
         case NeoPixelState::INIT:  _setPixelColor(COLOR_INIT); break;
         case NeoPixelState::RUN:   _setPixelColor(COLOR_RUN);  break;
         case NeoPixelState::ERROR: _setPixelColor(COLOR_OFF);  break;
+        case NeoPixelState::WARNING: _setPixelColor(COLOR_WARNING); break;
     }
 }
 

@@ -4,6 +4,7 @@
 #include "drivers/Thermistors.h"
 #include "drivers/CanBus.h"
 #include "drivers/NativeCanBackend.h"
+#include "drivers/AnalogPsuBackend.h"
 #include "drivers/OLED.h"
 #include "drivers/PowerButton.h"
 #include "drivers/Encoder.h"
@@ -22,6 +23,7 @@ extern ThermistorManager ledThermistor;
 extern ThermistorManager pumpThermistor;
 extern CanBusManager psu;
 extern NativeCanBackend canBackend;
+extern AnalogPsuBackend psuAnalog;
 extern OledManager oled;
 extern NeoPixelManager neoPixel;
 

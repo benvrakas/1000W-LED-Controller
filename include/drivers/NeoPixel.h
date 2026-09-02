@@ -7,7 +7,9 @@ enum class NeoPixelState {
     OFF,
     INIT,
     RUN,
-    ERROR
+    ERROR,
+    WARNING  // Solid, non-blinking: one or more channels are being ignored
+             // (see SystemController::ignoredChannelCount(), StateErrorKill.cpp)
 };
 
 // NeoPixelManager class to handle the onboard NeoPixel LED
@@ -49,6 +51,7 @@ private:
     static const uint32_t COLOR_INIT = 0x0000FF; // Blue
     static const uint32_t COLOR_RUN = 0x00FF00;  // Green
     static const uint32_t COLOR_ERROR = 0xFF0000; // Red
+    static const uint32_t COLOR_WARNING = 0xFF8000; // Amber
 
     // Blinking parameters
     unsigned long _previousMillis;

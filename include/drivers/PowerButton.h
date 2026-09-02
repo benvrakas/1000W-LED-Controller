@@ -14,6 +14,12 @@ class PowerButtonManager {
         // For v1, "armed" is equivalent to "system ON".
         bool isArmed() const;
 
+        // Raw, unlatched pin read -- does not touch the arm/disarm state
+        // machine at all. Intended for callers (e.g. the ERROR_KILL
+        // diagnostics screen) that want to read the button directly without
+        // running update()'s hold-to-arm/press-to-disarm logic.
+        bool isPressed() const { return digitalRead(_swPin) == LOW; }
+
         // Call from the main loop/state machine with the current time.
         // This handles long-press detection for ON and debounced OFF.
         void update(unsigned long now);

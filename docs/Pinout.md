@@ -24,11 +24,14 @@ This document details the pin mappings for the Adafruit Feather M4 CAN Express b
 | **Outputs & Control** |
 | Switch LED | A2 | PB08 | Power Button Status LED | |
 | PSU Remote On/Off | A4 | PA04 | Remote1 & Therm_sw1 | Remote1 connects to UHP 1500 Remote On/Off & +12Vaux. In series with Therm_sw1 (optional hardware thermal cutoff switch). Therm_sw1 can be bridged and ignored. |
+| PSU PC (current prog) | A5 | PA06 | UHP-1500-48 CN71 pin 2 | PWM out → external RC low-pass → PC pin. Only used when `PsuControlConfig::PSU_CONTROL_VIA_CAN == false` (analog/blind mode). See `AnalogPsuBackend`/`AnalogPsuConfig` for the transfer curve. |
 | **Display (I2C)** |
 | OLED SDA | SDA | PA12 | Feather Wing OLED SDA | |
 | OLED SCL | SCL | PA13 | Feather Wing OLED SCL | |
-| **Unused** |
-| Unused | A5 | PA06 | None | |
+| **Unused (Free)** |
+| Free | MOSI | PB23 | None | Available (SPI bus has no devices) |
+| Free | MISO | PB22 | None | Reserved for future DC-OK input from CN71 pin 6 |
+| Free | SCK | PA17 | None | Available |
 
 ## Internal Board Pins (Feather M4 CAN)
 - **CAN TX/RX**: Handled internally by the ATSAME51.

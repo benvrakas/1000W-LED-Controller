@@ -36,15 +36,23 @@ void InputService::update(unsigned long now) {
     _prevArmed = currentArmed;
     _armed     = currentArmed;
 
-    // Update encoder-derived knob fraction
-    int16_t counts = _encoder.getCounts();
-    if (counts < 0) counts = 0;
-    if (counts > EncoderManager::MAX_COUNTS_RANGE) {
-        counts = EncoderManager::MAX_COUNTS_RANGE;
-    }
+    // Update encoder-derived knob fraction. Only tracked while armed --
+    // while disarmed the knob has no effect on output, so the on-screen
+    // gauge shouldn't visibly move either (turning it while off used to
+    // silently roll _knobFraction even though nothing downstream applied
+    // it, which looked like the setpoint was adjustable while off).
+    if (currentArmed) {
+        int16_t counts = _encoder.getCounts();
+        if (counts < 0) counts = 0;
+        if (counts > EncoderManager::MAX_COUNTS_RANGE) {
+            counts = EncoderManager::MAX_COUNTS_RANGE;
+        }
 
-    _knobFraction = static_cast<float>(counts) /
-                    static_cast<float>(EncoderManager::MAX_COUNTS_RANGE);
+        _knobFraction = static_cast<float>(counts) /
+                        static_cast<float>(EncoderManager::MAX_COUNTS_RANGE);
+    } else {
+        _knobFraction = 0.0f;
+    }
 }
 
 void InputService::forceKnobToZero() {

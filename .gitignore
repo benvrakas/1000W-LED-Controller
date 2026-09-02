@@ -13,7 +13,11 @@
 # --- System Files ---
 .DS_Store
 Thumbs.db
+desktop.ini
 *.log
+
+# --- Claude Code local config ---
+.claude/
 
 .pio
 .vscode/.browse.c_cpp.db*

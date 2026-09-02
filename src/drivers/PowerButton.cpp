@@ -24,15 +24,20 @@ void PowerButtonManager::update(unsigned long now) {
     if (isDown) {
         if (!_wasPressed) {
             // PRESS EDGE
-            _pressTimeStamp = now;
-            
+            // Check the lockout against the PREVIOUS timestamp (set when we
+            // armed, or by our last press) before overwriting it below --
+            // doing it in the other order made "now - _pressTimeStamp"
+            // always ~0, so this could never fire and the unit could never
+            // be disarmed once armed.
             if (_armStatus && (now - _pressTimeStamp > 500)) {
                 // If system is already ON, any new press is an instant OFF
                 // Added 500ms lockout to prevent noise from PSU start-up disarming us
                 _armStatus = false;
-                _armToggleDone = true; 
+                _armToggleDone = true;
                 Serial.println(F("BTN: DISARMED (User Press)"));
             }
+
+            _pressTimeStamp = now;
         } else {
             // CONTINUOUS HOLD
             if (!_armStatus && !_armToggleDone) {

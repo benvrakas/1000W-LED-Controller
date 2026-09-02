@@ -1,8 +1,8 @@
 #include "core/Hardware.h"
 #include "config/PinMap.h"
+#include "config/PowerConfig.h"
 #include "config/ThermalConfig.h"
 #include "logging/FaultManager.h"
-#include <SPI.h>
 
 PowerButtonManager powerButton(PinMap::PIN_SW_BTN, PinMap::PIN_SW_LED);
 
@@ -18,9 +18,14 @@ TachometerManager psuFan(PinMap::PIN_PSU_FAN_PWM, PinMap::PIN_PSU_FAN_TACH,
     TachometerConfig::MAIN_PSU_DEADSTART_DUTY, TachometerConfig::MAX_MAIN_PSU_RPM,
     TachometerConfig::MAIN_PSU_STALL_RPM);
 
+// NMB 12038VA-24R datasheet specs PWM Frequency f = 25kHz and documents
+// "Vst = Open -> Full Speed" as its fallback when it can't decode the
+// signal - the core's default PWM frequency (~1.8kHz) isn't close enough,
+// which is why this fan pins at full speed while other models on the same
+// port work fine.
 TachometerManager auxFan(PinMap::PIN_AUX_FAN_PWM, PinMap::PIN_AUX_FAN_TACH,
     TachometerConfig::AUX_DEADSTART_DUTY, TachometerConfig::MAX_AUX_RPM,
-    TachometerConfig::AUX_STALL_RPM);
+    TachometerConfig::AUX_STALL_RPM, 25000);
 
 ThermistorManager ledThermistor(PinMap::PIN_THERM_LED, ThermistorConfig::BETA_VALUE_LED, 
     ThermistorConfig::SERIES_RESISTOR_LED, ThermistorConfig::NOMINAL_RESISTANCE_LED, 
@@ -32,6 +37,7 @@ ThermistorManager pumpThermistor(PinMap::PIN_THERM_WATER, ThermistorConfig::BETA
 
 CanBusManager psu;
 NativeCanBackend canBackend;
+AnalogPsuBackend psuAnalog(PinMap::PIN_PSU_PC_PWM);
 
 OledManager oled(PinMap::PIN_OLED_SDA, PinMap::PIN_OLED_SCL, OLEDScreenConfig::DEFAULT_ADDRESS,
     OLEDScreenConfig::SCREEN_WIDTH, OLEDScreenConfig::SCREEN_HEIGHT);
@@ -45,9 +51,13 @@ void initHardware() {
     Wire.setTimeout(100);  // 100ms timeout
     oled.begin(&Wire);
 
-    Serial.println(F("HW: CAN init..."));
-    SPI.begin();
-    psu.begin(&canBackend);
+    if (PsuControlConfig::PSU_CONTROL_VIA_CAN) {
+        Serial.println(F("HW: CAN init..."));
+        psu.begin(&canBackend);
+    } else {
+        Serial.println(F("HW: Analog PSU mode (CAN driver idle)"));
+        psuAnalog.begin();
+    }
 
     Serial.println(F("HW: NeoPixel init..."));
     neoPixel.begin();

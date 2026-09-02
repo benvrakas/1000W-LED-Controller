@@ -1,16 +1,18 @@
 #include "state/SystemController.h"
+#include "logging/FaultManager.h"
 #include <Arduino.h>
 
 // SystemController Class Construction
 SystemController::SystemController(AppContext& ctx)
     : context(ctx),
       cooling(ctx.mainFan, ctx.psuFan, ctx.pump, ctx.auxFan, ctx.ledThermistor, ctx.pumpThermistor),
-      psu(ctx.psu),
+      psu(ctx.psu, ctx.psuAnalog),
       input(ctx.encoder, ctx.powerButton),
       ui(ctx.oled),
       currentState(SystemState::INIT), 
       globalLedTemp(0.0f), globalPumpTemp(0.0f),
-      globalMainFansRPM(0), globalAuxFanRPM(0), globalPSUFanRPM(0), globalPumpRPM(0)
+      globalMainFansRPM(0), globalAuxFanRPM(0), globalPSUFanRPM(0), globalPumpRPM(0),
+      globalMainFanDuty(0), globalAuxFanDuty(0), globalPSUFanDuty(0), globalPumpDuty(0)
 {}
 
 // 1. Set initial machine state cleanly
@@ -56,13 +58,19 @@ void SystemController::transitionTo(SystemState newState) {
     // Update the state
     currentState = newState;
 
+    // Debounce timers only mean anything within one continuous stretch of a
+    // state; carrying them across a transition means the first bad sample on
+    // the other side latches instantly with no debounce. Note this leaves the
+    // latched fault alone -- ERROR_KILL stays latched until hold-to-clear.
+    FaultManager::instance().resetDebounceTimers();
+
     // Update status LED
     switch (newState) {
         case SystemState::INIT:
             context.neoPixel.setState(NeoPixelState::INIT);
             break;
         case SystemState::RUN:
-            context.neoPixel.setState(NeoPixelState::RUN);
+            context.neoPixel.setState(ignoredChannelCount() > 0 ? NeoPixelState::WARNING : NeoPixelState::RUN);
             break;
         case SystemState::ERROR_KILL:
             context.neoPixel.setState(NeoPixelState::ERROR);

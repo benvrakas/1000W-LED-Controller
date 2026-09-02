@@ -39,6 +39,9 @@ namespace PinMap {
 
     // ---PSU CONTROL LINES---
     static constexpr uint8_t PIN_PSU_REMOTE = A4;    // A4 (PA04): Remote On/Off
+    static constexpr uint8_t PIN_PSU_PC_PWM = A5;    // A5 (PA06): Analog current programming
+                                                     // PWM -> external RC -> CN71 pin 2 (PC).
+                                                     // Only used when PsuControlConfig::PSU_CONTROL_VIA_CAN == false.
 
     // ---Status NeoPixel---
     // Renamed to avoid collision with board macros like PIN_NEOPIXEL or NEOPIXEL

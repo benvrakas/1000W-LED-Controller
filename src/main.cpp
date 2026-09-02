@@ -14,6 +14,7 @@ AppContext context = {
     encoder,        // EncoderManager& encoder
     powerButton,    // PowerButtonManager& powerButton
     psu,            // CanBusManager& psu
+    psuAnalog,      // AnalogPsuBackend& psuAnalog
     oled,           // OledManager& oled
     neoPixel        // NeoPixelManager& neoPixel
 };

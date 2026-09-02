@@ -3,6 +3,7 @@
 #include "drivers/Tachometers.h"
 #include "drivers/Thermistors.h"
 #include "drivers/CanBus.h"
+#include "drivers/AnalogPsuBackend.h"
 #include "drivers/OLED.h"
 #include "drivers/PowerButton.h"
 #include "drivers/Encoder.h"
@@ -28,6 +29,7 @@ struct AppContext {
 
     // Actuators / Comms
     CanBusManager&     psu;
+    AnalogPsuBackend&  psuAnalog;
     OledManager&       oled;
     NeoPixelManager&   neoPixel;
 };

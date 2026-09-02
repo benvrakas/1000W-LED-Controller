@@ -9,10 +9,11 @@
 // telemetry that other subsystems (cooling, UI, logging) can consume.
 
 class CanBusManager;
+class AnalogPsuBackend;
 
 class PsuService {
 public:
-    PsuService(CanBusManager& psu);
+    PsuService(CanBusManager& psu, AnalogPsuBackend& analog);
 
     // Bring the PSU control layer online. Intended to be called once from
     // the RUN state when the system first transitions from INIT.
@@ -56,7 +57,8 @@ public:
     void setSlewRatePercentPerSec(float rate) { _slewRatePctPerSec = rate; }
 
 private:
-    CanBusManager& _psu;
+    CanBusManager&     _psu;
+    AnalogPsuBackend&  _analog;
 
     // Slew-limited LED current control
     float    _uiSetpointFrac;      // 0..1 from encoder/UI
@@ -65,9 +67,6 @@ private:
     float    _slewRatePctPerSec;   // active slew rate (percent per second)
     bool     _isOn;                // true when PSU is enabled
     unsigned long _shutdownStartTimeMs; // tracks when shutdown started for hard timeout
-
-    // Configuration
-    static constexpr float MAX_LED_CURRENT_A = 22.0f; // COB nominal
 
     // Helper: apply a symmetric slew limit toward a target, using the
     // configured percent-per-second rate and elapsed time.
